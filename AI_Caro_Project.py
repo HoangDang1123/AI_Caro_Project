@@ -1,7 +1,10 @@
 from tkinter import *
+import pygame
+from PIL import Image, ImageTk
 from time import *
 import tkinter as tk
 import sys
+
 myInterface = Tk()
 s = Canvas(myInterface, width=myInterface.winfo_screenwidth(), height=myInterface.winfo_screenheight() - 100, background= "#b69b4c")
 myInterface.state("zoomed")
@@ -16,8 +19,13 @@ height = 1000
 #Note: all "exit" does is terminate the while loop, so it dosen't really do much...
 #      to begin another round you would need to restart the program.
 
-def create_circle(x, y, radius, fill = "", outline = "black", width = 1):
-    s.create_oval(x - radius, y - radius, x + radius, y + radius, fill = fill, outline = outline, width = width)
+def create_circle(x, y, radius, count, width = 1):
+    if count % 2 != 0:
+        s.create_oval(x - radius, y - radius, x + radius, y + radius, fill = "black", outline = "", width = width)
+        s.create_text(x, y, text = count, fill = "white")
+    else:
+        s.create_oval(x - radius, y - radius, x + radius, y + radius, fill = "white", outline = "", width = width)
+        s.create_text(x, y, text = count, fill = "black")
 
 def Value_Check_int(Value):
     try:
@@ -32,7 +40,6 @@ def MouseClick(event):
     X_click = event.x
     Y_click = event.y
     Click_Cord = Piece_Location(X_click, Y_click)
-    print(Click_Cord)
 
 s.bind("<Button-1>", MouseClick)
 
@@ -61,10 +68,10 @@ def Location_Validation():
 
 def Score_Board():
     if Winner == None:
-        Turn_Text = s.create_text(width / 2, height - Frame_Gap + 15, text = "Turn = " + Turn, font = "Helvetica 25 bold", fill = Turn)
+        Turn_Text = s.create_text(width / 2 - 10, height - Frame_Gap - 25, text = "Turn = " + Turn, font = "Helvetica 20 bold", fill = Turn)
         return Turn_Text
     else:
-        s.create_text(width / 2, height - Frame_Gap + 15, text = Winner.upper() + " WINS!", font = "Helvetica 25 bold", fill = Winner.lower())
+        s.create_text(width / 2, height - Frame_Gap - 25, text = Winner.upper() + " WINS!", font = "Helvetica 20 bold", fill = Winner.lower())
 
 def winCheck(Piece_Number, Piece_Colour, board):
     if rowCheck(Piece_Number, board) or rowCheck(Piece_Number, transpose(board)) or rowCheck(Piece_Number, transposeDiagonalInc(board)) or rowCheck(Piece_Number, transposeDiagonalDec(board)):
@@ -187,6 +194,34 @@ Actual_CordY2 = []
 #2D Board List
 board = []
 
+logo = tk.PhotoImage(file="./image/hcmute.png")
+L = tk.Label(myInterface, image = logo, bg = "#b69b4c")
+L.place(x = Board_X1 + Frame_Gap + Board_GapX * Board_Size + 230, y = Board_Y1 - Frame_Gap - 70)
+
+T = tk.Label(myInterface, text = "ĐỒ ÁN CUỐI KỲ", font = ("Arial", 20, "bold"), fg = "navy blue", bg = "#b69b4c")
+T.place(x = Board_X1 + Frame_Gap + Board_GapX * Board_Size + 360, y = Board_Y1 - Frame_Gap + 30)
+
+C = tk.Label(myInterface, text = "Lớp: ARIN330585_03CLC", font = ("Arial", 12, "bold"), fg = "navy blue", bg = "#b69b4c")
+C.place(x = Board_X1 + Frame_Gap + Board_GapX * Board_Size + 150, y = Board_Y1 - Frame_Gap + 75)
+
+N = tk.Label(myInterface, text = "Tên thành viên:", font = ("Arial", 12, "bold"), fg = "navy blue", bg = "#b69b4c")
+N.place(x = Board_X1 + Frame_Gap + Board_GapX * Board_Size + 150, y = Board_Y1 - Frame_Gap + 105)
+
+N1 = tk.Label(myInterface, text = "Đỗ Anh Khoa          -      21110???", font = ("Arial", 12, "bold"), fg = "navy blue", bg = "#b69b4c")
+N1.place(x = Board_X1 + Frame_Gap + Board_GapX * Board_Size + 420, y = Board_Y1 - Frame_Gap + 105)
+
+N2 = tk.Label(myInterface, text = "Đào Hoàng Đăng    -      21110163", font = ("Arial", 12, "bold"), fg = "navy blue", bg = "#b69b4c")
+N2.place(x = Board_X1 + Frame_Gap + Board_GapX * Board_Size + 420, y = Board_Y1 - Frame_Gap + 145)
+
+N3 = tk.Label(myInterface, text = "Nguyễn Anh Hào    -      211101???", font = ("Arial", 12, "bold"), fg = "navy blue", bg = "#b69b4c")
+N3.place(x = Board_X1 + Frame_Gap + Board_GapX * Board_Size + 420, y = Board_Y1 - Frame_Gap + 185)
+
+BL = tk.Label(myInterface, text = "BEST LINE", font = ("Arial", 12, "bold"), fg = "navy blue", bg = "#b69b4c")
+BL.place(x = Board_X1 + Frame_Gap + Board_GapX * Board_Size + 420, y = Board_Y1 - Frame_Gap + 255)
+
+BLT = tk.Text(myInterface, bg = "#b69b4c", width = 75, height =5, borderwidth = 3, state = tk.DISABLED)
+BLT.place(x = Board_X1 + Frame_Gap + Board_GapX * Board_Size + 120, y = Board_Y1 - Frame_Gap + 285)
+
 #START button
 S = tk.Button(myInterface, text = "START", font = "Helvetica 14 bold", command = Exit, bg = "gray", fg = "black")
 S.pack()
@@ -264,9 +299,6 @@ for z in range(1, Board_Size + 2):
 #Create Board
 s.create_rectangle(Board_X1 - Frame_Gap, Board_Y1 - Frame_Gap, Board_X1 + Frame_Gap + Board_GapX * Board_Size, Board_Y1 + Frame_Gap + Board_GapY * Board_Size, width = 3)
 
-#INFOR frame
-s.create_rectangle(Board_X1 + Frame_Gap + Board_GapX * Board_Size + 100, Board_Y1 - Frame_Gap, myInterface.winfo_screenwidth() - 100, 300, width = 3)
-
 #BESTLINE frame
 s.create_rectangle(Board_X1 + Frame_Gap + Board_GapX * Board_Size + 100, Board_Y1 - Frame_Gap + 250, myInterface.winfo_screenwidth() - 100, Board_Y1 + Frame_Gap + Board_GapY * Board_Size - 430, width = 3)
 
@@ -301,7 +333,7 @@ while Winner == None:
 
         s.delete(Turn_Text)
         
-        create_circle(Board_X1 + Board_GapX * (X - 1), Board_Y1 + Board_GapY * (Y - 1), radius = Chess_Radius, fill = Turn)
+        create_circle(Board_X1 + Board_GapX * (X - 1), Board_Y1 + Board_GapY * (Y - 1), Chess_Radius, Turn_Num)
 
         if Turn_Num % 2 == 1:
             White_Cord_PickedX.append(X)
