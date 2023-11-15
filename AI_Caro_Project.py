@@ -116,7 +116,9 @@ class GUI(Board):
         #Turn
         self.turn_num = 1
         self.turn = "white"
-        self.winner = "None"
+        self.winner = None
+        self.circles = []
+        self.texts = []
 
         #Cord List
         self.black_cord_picked_x = []
@@ -131,8 +133,6 @@ class GUI(Board):
         self.actual_cord_y_1 = []
         self.actual_cord_x_2 = []
         self.actual_cord_y_2 = []
-        
-        self.winner = None
         
         #2D Board List
         self.board = []
@@ -286,7 +286,7 @@ class GUI(Board):
         self.restart_button = tk.Button(self.window,
                                         text = "Restart",
                                         font = "Helvetica 14 bold",
-                                        command = None,
+                                        command = self.restart,
                                         bg = "gray",
                                         fg = "black")
         self.restart_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(315 / 1920) * self.window.winfo_screenwidth(),
@@ -297,7 +297,7 @@ class GUI(Board):
         self.undo_button = tk.Button(self.window,
                                         text = "Undo",
                                         font = "Helvetica 14 bold",
-                                        command = None,
+                                        command = self.undo,
                                         bg = "gray",
                                         fg = "black")
         self.undo_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(155 / 1920) * self.window.winfo_screenwidth(),
@@ -323,27 +323,16 @@ class GUI(Board):
                                          self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - float(190 / 1080) * self.window.winfo_screenheight(),
                                          fill = "gray",
                                          outline = "gray")
-        # Button AI chơi với AI
-        self.ai_ai_button = tk.Button(self.window,
-                               text = "AI - AI",
+        # Button AI chơi với Người
+        self.ai_human_button = tk.Button(self.window,
+                               text = "AI - Human",
                                font = "Helvetica 14 bold",
                                command = None,
                                bg = "gray",
                                fg = "black")
-        self.ai_ai_button.place(x = self.window.winfo_screenwidth() - float(455 / 1920) * self.window.winfo_screenwidth(),
+        self.ai_human_button.place(x = self.window.winfo_screenwidth() - float(455 / 1920) * self.window.winfo_screenwidth(),
                   y = self.board_y1 - self.frame_gap + float(495 / 1080) * self.window.winfo_screenheight(),
-                  width = self.chess_radius * 7,
-                  height = self.chess_radius * 3)
-        # Button AI chơi với Người
-        self.ai_human_button = tk.Button(self.window,
-                               text = "AI - Human",
-                               font = "Helvetica 13 bold",
-                               command = None,
-                               bg = "gray",
-                               fg = "black")
-        self.ai_human_button.place(x = self.window.winfo_screenwidth() - float(295 / 1920) * self.window.winfo_screenwidth(),
-                  y = self.board_y1 - self.frame_gap + float(495 / 1080) * self.window.winfo_screenheight(),
-                  width = self.chess_radius * 7,
+                  width = self.chess_radius * 15,
                   height = self.chess_radius * 3)
         # Button Người chơi với Người
         self.human_human_button = tk.Button(self.window,
@@ -470,29 +459,33 @@ class GUI(Board):
         
     def create_circle(self, x, y, radius, count, width = 2):
         if count % 2 != 0:
-            self.background.create_oval(x - radius,
+            circle_id = self.background.create_oval(x - radius,
                                         y - radius,
                                         x + radius,
                                         y + radius,
                                         fill = "black",
                                         outline = "",
                                         width = width)
-            self.background.create_text(x,
+            text_id = self.background.create_text(x,
                                         y,
                                         text = count,
                                         fill = "white")
         else:
-            self.background.create_oval(x - radius,
+            circle_id = self.background.create_oval(x - radius,
                                         y - radius,
                                         x + radius,
                                         y + radius,
                                         fill = "white",
                                         outline = "",
                                         width = width)
-            self.background.create_text(x,
+            text_id = self.background.create_text(x,
                                         y,
                                         text = count,
                                         fill = "black")
+        self.background.addtag_withtag("circle", circle_id)
+        self.background.addtag_withtag("text", text_id)
+        self.circles.append(circle_id)
+        self.texts.append(text_id)
             
     def start(self):
 
@@ -530,11 +523,68 @@ class GUI(Board):
 
                 self.winner = self.b.win_check(color_check, win_check, self.board)
                 
-        self.background.create_text(self.width / 2,
+        winner_text = self.background.create_text(self.width / 2,
                                     self.height - self.frame_gap - 25,
                                     text = self.winner.upper() + " WINS!",
                                     font = "Helvetica 20 bold",
                                     fill = self.winner.lower())
+        self.background.addtag_withtag("winnertext", winner_text)
+        
+    def restart(self):
+        circle_ids = self.background.find_withtag("circle")
+        self.background.delete(*circle_ids)
+        
+        text_ids = self.background.find_withtag("text")
+        self.background.delete(*text_ids)
+        
+        winner_text = self.background.find_withtag("winnertext")
+        self.background.delete(*winner_text)
+        
+        self.turn_num = 1
+        self.turn = "white"
+        self.winner = None
+
+        #Cord List
+        self.black_cord_picked_x = []
+        self.black_cord_picked_y = []
+        self.white_cord_picked_x = []
+        self.white_cord_picked_y = []
+
+        #Click Detection Cord
+        self.game_cord_x = []
+        self.game_cord_y = []
+        self.actual_cord_x_1 = []
+        self.actual_cord_y_1 = []
+        self.actual_cord_x_2 = []
+        self.actual_cord_y_2 = []
+        
+        #2D Board List
+        self.board = []
+        for i in range(self.board_size + 1):
+            self.board.append([0] * (self.board_size + 1))
+            
+        self.unfilled = 0
+        self.black_piece = 1
+        self.white_piece = 2
+        
+        #Fills Empty List
+        for z in range(1, self.board_size + 2):
+            for i in range(1, self.board_size + 2):
+                self.game_cord_x.append(z)
+                self.game_cord_y.append(i)
+                self.actual_cord_x_1.append((z - 1) * self.board_gap_x + self.board_x1 - self.chess_radius)
+                self.actual_cord_y_1.append((i - 1) * self.board_gap_y + self.board_y1 - self.chess_radius)
+                self.actual_cord_x_2.append((z - 1) * self.board_gap_x + self.board_x1 + self.chess_radius)
+                self.actual_cord_y_2.append((i - 1) * self.board_gap_y + self.board_y1 + self.chess_radius)
+                
+    def undo(self):
+        circle = self.circles.pop()
+        self.background.delete(circle)
+        
+        text = self.texts.pop()
+        self.background.delete(text)
+        
+        self.turn_num -= 1
             
     def exit(self):
         global winner
