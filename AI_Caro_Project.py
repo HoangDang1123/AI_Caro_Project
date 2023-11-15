@@ -93,7 +93,7 @@ class GUI(Board):
         self.background = tk.Canvas(
             self.window,
             width = self.window.winfo_screenwidth(),
-            height = self.window.winfo_screenheight() - 100,
+            height = self.window.winfo_screenheight() - float(100 / 1080) * self.window.winfo_screenheight(),
             background= "#b69b4c"
             )
         self.background.pack()
@@ -102,8 +102,8 @@ class GUI(Board):
         #Board Size
         self.board_size = 19
         self.frame_gap = 25
-        self.width = 1000
-        self.height = 1000
+        self.width = 0.52 * self.window.winfo_screenwidth()
+        self.height = 0.93 * self.window.winfo_screenheight()
         
         self.board_size = self.board_size - 1
         self.board_x1 = self.width / 10
@@ -182,8 +182,8 @@ class GUI(Board):
                               font = ("Arial", 20, "bold"),
                               fg = "navy blue",
                               bg = "#b69b4c")
-        self.title.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 360,
-                         y = self.board_y1 - self.frame_gap + 30)
+        self.title.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 0.1875 * self.window.winfo_screenwidth(),
+                         y = self.board_y1 - self.frame_gap + 0.028 * self.window.winfo_screenheight())
 
         # Label tên lớp
         self.class_name = tk.Label(self.window,
@@ -191,8 +191,8 @@ class GUI(Board):
                                    font = ("Arial", 12, "bold"),
                                    fg = "navy blue",
                                    bg = "#b69b4c")
-        self.class_name.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 150,
-                              y = self.board_y1 - self.frame_gap + 75)
+        self.class_name.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 0.078125 * self.window.winfo_screenwidth(),
+                              y = self.board_y1 - self.frame_gap + 0.069 * self.window.winfo_screenheight())
 
         # Label tên thành viên
         self.member_name = tk.Label(self.window,
@@ -200,8 +200,8 @@ class GUI(Board):
                                     font = ("Arial", 12, "bold"),
                                     fg = "navy blue",
                                     bg = "#b69b4c")
-        self.member_name.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 150,
-                               y = self.board_y1 - self.frame_gap + 105)
+        self.member_name.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(150 / 1920) * self.window.winfo_screenwidth(),
+                               y = self.board_y1 - self.frame_gap + float(105 / 1080) * self.window.winfo_screenheight())
 
         # Label tên thành viên 1
         self.member_1 = tk.Label(self.window,
@@ -209,30 +209,31 @@ class GUI(Board):
                                  font = ("Arial", 12, "bold"),
                                  fg = "navy blue",
                                  bg = "#b69b4c")
-        self.member_1.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 420, y = self.board_y1 - self.frame_gap + 105)
+        self.member_1.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(420 / 1920) * self.window.winfo_screenwidth(),
+                            y = self.board_y1 - self.frame_gap + float(105 / 1080) * self.window.winfo_screenheight(),)
 
         # Label tên thành viên 2
         self.member_2 = tk.Label(self.window, text = "Đào Hoàng Đăng    -      21110163",
                                  font = ("Arial", 12, "bold"),
                                  fg = "navy blue",
                                  bg = "#b69b4c")
-        self.member_2.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 420,
-                            y = self.board_y1 - self.frame_gap + 145)
+        self.member_2.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(420 / 1920) * self.window.winfo_screenwidth(),
+                            y = self.board_y1 - self.frame_gap + float(145 / 1080) * self.window.winfo_screenheight(),)
 
         # Label tên thành viên 3
         self.member_3 = tk.Label(self.window, text = "Nguyễn Anh Hào    -      21110823",
                                  font = ("Arial", 12, "bold"),
                                  fg = "navy blue",
                                  bg = "#b69b4c")
-        self.member_3.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 420,
-                            y = self.board_y1 - self.frame_gap + 185)
+        self.member_3.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(420 / 1920) * self.window.winfo_screenwidth(),
+                            y = self.board_y1 - self.frame_gap + float(185 / 1080) * self.window.winfo_screenheight())
         
     def best_line(self):
         # Frame
-        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_y * self.board_size + 100,
-                                         self.board_y1 - self.frame_gap + 250,
-                                         self.window.winfo_screenwidth() - 100,
-                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - 430,
+        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_y * self.board_size + float(100 / 1920) * self.window.winfo_screenwidth(),
+                                         self.board_y1 - self.frame_gap + float(250 / 1080) * self.window.winfo_screenheight(),
+                                         self.window.winfo_screenwidth() - float(100 / 1920) * self.window.winfo_screenwidth(),
+                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - float(430 / 1080) * self.window.winfo_screenheight(),
                                          width = 3)
         
         # Label
@@ -241,8 +242,8 @@ class GUI(Board):
                                         font = ("Arial", 12, "bold"),
                                         fg = "navy blue",
                                         bg = "#b69b4c")
-        self.best_line_label.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 420,
-                             y = self.board_y1 - self.frame_gap + 255)
+        self.best_line_label.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(420 / 1920) * self.window.winfo_screenwidth(),
+                                   y = self.board_y1 - self.frame_gap + float(255 / 1080) * self.window.winfo_screenheight())
 
         # Text
         self.best_line_text = tk.Text(self.window,
@@ -250,23 +251,23 @@ class GUI(Board):
                                       height =5,
                                       borderwidth = 3,
                                       state = tk.DISABLED)
-        self.best_line_text.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 120,
-                                  y = self.board_y1 - self.frame_gap + 285)
+        self.best_line_text.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(120 / 1920) * self.window.winfo_screenwidth(),
+                                  y = self.board_y1 - self.frame_gap + float(285 / 1080) * self.window.winfo_screenheight())
         
     def button(self):
         # Frame
-        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 100,
-                           self.board_y1 - self.frame_gap + 440,
-                           self.window.winfo_screenwidth() - 100,
+        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(100 / 1920) * self.window.winfo_screenwidth(),
+                           self.board_y1 - self.frame_gap + float(440 / 1080) * self.window.winfo_screenheight(),
+                           self.window.winfo_screenwidth() - float(100 / 1920) * self.window.winfo_screenwidth(),
                            self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size,
                            fill = "silver",
                            outline = "silver")
 
         # Frame các nút điều khiển chính
-        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 130,
-                                         self.board_y1 - self.frame_gap + 470,
-                                         self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 480,
-                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - 190,
+        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(130 / 1920) * self.window.winfo_screenwidth(),
+                                         self.board_y1 - self.frame_gap + float(470 / 1080) * self.window.winfo_screenheight(),
+                                         self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(480 / 1920) * self.window.winfo_screenwidth(),
+                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - float(190 / 1080) * self.window.winfo_screenheight(),
                                          fill = "gray",
                                          outline = "gray")
         # Button bắt đầu chơi
@@ -276,8 +277,8 @@ class GUI(Board):
                                       command = self.start,
                                       bg = "gray",
                                       fg = "black")
-        self.start_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 155,
-                                y = self.board_y1 - self.frame_gap + 495,
+        self.start_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(155 / 1920) * self.window.winfo_screenwidth(),
+                                y = self.board_y1 - self.frame_gap + float(495 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
         # Button bát đầu chơi lại
@@ -287,8 +288,8 @@ class GUI(Board):
                                         command = None,
                                         bg = "gray",
                                         fg = "black")
-        self.restart_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 315,
-                                y = self.board_y1 - self.frame_gap + 495,
+        self.restart_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(315 / 1920) * self.window.winfo_screenwidth(),
+                                y = self.board_y1 - self.frame_gap + float(495 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
         # Button quay lại lượt trước
@@ -298,8 +299,8 @@ class GUI(Board):
                                         command = None,
                                         bg = "gray",
                                         fg = "black")
-        self.undo_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 155,
-                                y = self.board_y1 - self.frame_gap + 575,
+        self.undo_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(155 / 1920) * self.window.winfo_screenwidth(),
+                                y = self.board_y1 - self.frame_gap + float(575 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
         # Button thoát game
@@ -309,16 +310,16 @@ class GUI(Board):
                                         command = self.exit,
                                         bg = "gray",
                                         fg = "black")
-        self.exit_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 315,
-                                y = self.board_y1 - self.frame_gap + 575,
+        self.exit_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(315 / 1920) * self.window.winfo_screenwidth(),
+                                y = self.board_y1 - self.frame_gap + float(575 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
         
         # Frame các nút chọn chế độ chơi
-        self.background.create_rectangle(self.window.winfo_screenwidth() - 480,
-                                         self.board_y1 - self.frame_gap + 470,
-                                         self.window.winfo_screenwidth() - 130,
-                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - 190,
+        self.background.create_rectangle(self.window.winfo_screenwidth() - float(480 / 1920) * self.window.winfo_screenwidth(),
+                                         self.board_y1 - self.frame_gap + float(470 / 1080) * self.window.winfo_screenheight(),
+                                         self.window.winfo_screenwidth() - float(130 / 1920) * self.window.winfo_screenwidth(),
+                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - float(190 / 1080) * self.window.winfo_screenheight(),
                                          fill = "gray",
                                          outline = "gray")
         # Button AI chơi với AI
@@ -328,8 +329,8 @@ class GUI(Board):
                                command = None,
                                bg = "gray",
                                fg = "black")
-        self.ai_ai_button.place(x = self.window.winfo_screenwidth() - 455,
-                  y = self.board_y1 - self.frame_gap + 495,
+        self.ai_ai_button.place(x = self.window.winfo_screenwidth() - float(455 / 1920) * self.window.winfo_screenwidth(),
+                  y = self.board_y1 - self.frame_gap + float(495 / 1080) * self.window.winfo_screenheight(),
                   width = self.chess_radius * 7,
                   height = self.chess_radius * 3)
         # Button AI chơi với Người
@@ -339,8 +340,8 @@ class GUI(Board):
                                command = None,
                                bg = "gray",
                                fg = "black")
-        self.ai_human_button.place(x = self.window.winfo_screenwidth() - 295,
-                  y = self.board_y1 - self.frame_gap + 495,
+        self.ai_human_button.place(x = self.window.winfo_screenwidth() - float(295 / 1920) * self.window.winfo_screenwidth(),
+                  y = self.board_y1 - self.frame_gap + float(495 / 1080) * self.window.winfo_screenheight(),
                   width = self.chess_radius * 7,
                   height = self.chess_radius * 3)
         # Button Người chơi với Người
@@ -350,36 +351,36 @@ class GUI(Board):
                                command = None,
                                bg = "gray",
                                fg = "black")
-        self.human_human_button.place(x = self.window.winfo_screenwidth() - 455,
-                  y = self.board_y1 - self.frame_gap + 575,
+        self.human_human_button.place(x = self.window.winfo_screenwidth() - float(455 / 1920) * self.window.winfo_screenwidth(),
+                  y = self.board_y1 - self.frame_gap + float(575 / 1080) * self.window.winfo_screenheight(),
                   width = self.chess_radius * 15,
                   height = self.chess_radius * 3)
 
         # Frame các nút chọn thuật toán
-        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 130,
-                                         self.board_y1 - self.frame_gap + 700,
-                                         self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 480,
-                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - 30,
+        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(130 / 1920) * self.window.winfo_screenwidth(),
+                                         self.board_y1 - self.frame_gap + float(700 / 1080) * self.window.winfo_screenheight(),
+                                         self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(480 / 1920) * self.window.winfo_screenwidth(),
+                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - float(30 / 1080) * self.window.winfo_screenheight(),
                                          fill = "gray",
                                          outline = "gray")
         # Button thuật toán Alpha-Beta
         self.ab_algorithm_button = tk.Button(self.window, text = "Alpha-Beta", font = "Helvetica 14 bold", command = None, bg = "gray", fg = "black")
-        self.ab_algorithm_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 155,
-                                y = self.board_y1 - self.frame_gap + 730,
+        self.ab_algorithm_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(155 / 1920) * self.window.winfo_screenwidth(),
+                                y = self.board_y1 - self.frame_gap + float(730 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
         # Button thuật toán IDS
         self.ids_algorithm_button = tk.Button(self.window, text = "IDS", font = "Helvetica 14 bold", command = None, bg = "gray", fg = "black")
-        self.ids_algorithm_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 315,
-                                y = self.board_y1 - self.frame_gap + 730,
+        self.ids_algorithm_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(315 / 1920) * self.window.winfo_screenwidth(),
+                                y = self.board_y1 - self.frame_gap + float(730 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
         
         # Frame các nút chọn ai đi trước
-        self.background.create_rectangle(self.window.winfo_screenwidth() - 480,
-                                         self.board_y1 - self.frame_gap + 700,
-                                         self.window.winfo_screenwidth() - 130,
-                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - 30,
+        self.background.create_rectangle(self.window.winfo_screenwidth() - float(480 / 1920) * self.window.winfo_screenwidth(),
+                                         self.board_y1 - self.frame_gap + float(700 / 1080) * self.window.winfo_screenheight(),
+                                         self.window.winfo_screenwidth() - float(130 / 1920) * self.window.winfo_screenwidth(),
+                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - float(30 / 1080) * self.window.winfo_screenheight(),
                                          fill = "gray",
                                          outline = "gray")
         # Button AI đánh trước
@@ -389,8 +390,8 @@ class GUI(Board):
                                command = None,
                                bg = "gray",
                                fg = "black")
-        self.ai_first_button.place(x = self.window.winfo_screenwidth() - 455,
-                  y = self.board_y1 - self.frame_gap + 730,
+        self.ai_first_button.place(x = self.window.winfo_screenwidth() - float(455 / 1920) * self.window.winfo_screenwidth(),
+                  y = self.board_y1 - self.frame_gap + float(730 / 1080) * self.window.winfo_screenheight(),
                   width = self.chess_radius * 7,
                   height = self.chess_radius * 3)
         # Button Người đánh trước
@@ -400,8 +401,8 @@ class GUI(Board):
                                command = None,
                                bg = "gray",
                                fg = "black")
-        self.human_first_button.place(x = self.window.winfo_screenwidth() - 295,
-                  y = self.board_y1 - self.frame_gap + 730,
+        self.human_first_button.place(x = self.window.winfo_screenwidth() - float(295 / 1920) * self.window.winfo_screenwidth(),
+                  y = self.board_y1 - self.frame_gap + float(730 / 1080) * self.window.winfo_screenheight(),
                   width = self.chess_radius * 7,
                   height = self.chess_radius * 3)
         
