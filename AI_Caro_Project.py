@@ -66,7 +66,6 @@ class Board():
                 index += 1
             return lst
 
-
     def transposeDiagonalInc(self, loa):
         lst = []
         for i in range(len(loa) * 2 - 1):
@@ -132,6 +131,8 @@ class GUI(Board):
         self.actual_cord_y_1 = []
         self.actual_cord_x_2 = []
         self.actual_cord_y_2 = []
+        
+        self.winner = None
         
         #2D Board List
         self.board = []
@@ -494,7 +495,7 @@ class GUI(Board):
                                         fill = "black")
             
     def start(self):
-        self.winner = None
+
         while self.winner == None:
             self.background.update()
 
@@ -509,23 +510,23 @@ class GUI(Board):
                 if self.turn_num % 2 == 1:
                     self.white_cord_picked_x.append(x)
                     self.white_cord_picked_y.append(y)
-                    self.board[y - 1][x - 1] = 2
+                    self.board[y - 1][x - 1] = 1
                     self.turn = "black"
                 elif self.turn_num % 2 == 0:
                     self.black_cord_picked_x.append(x)
                     self.black_cord_picked_y.append(y)
-                    self.board[y - 1][x - 1] = 1
+                    self.board[y - 1][x - 1] = 2
                     self.turn = "white"
 
-                self.turn_num += + 1
+                self.turn_num += 1
 
                 if self.turn == "white":
-                    color_check = self.black_piece
-                    win_check = "black"
-
-                elif self.turn == "black":
                     color_check = self.white_piece
                     win_check = "white"
+
+                elif self.turn == "black":
+                    color_check = self.black_piece
+                    win_check = "black"
 
                 self.winner = self.b.win_check(color_check, win_check, self.board)
                 
