@@ -140,8 +140,12 @@ class GUI(Board):
             self.board.append([0] * (self.board_size + 1))
             
         self.unfilled = 0
-        self.black_piece = 1
-        self.white_piece = 2
+        self.white_piece = 1
+        self.black_piece = 2
+        
+        self.AI = False
+        self.AI_turn = False
+        self.AI_algorithm = False
         
         #Fills Empty List
         for z in range(1, self.board_size + 2):
@@ -327,7 +331,7 @@ class GUI(Board):
         self.ai_human_button = tk.Button(self.window,
                                text = "AI - Human",
                                font = "Helvetica 14 bold",
-                               command = None,
+                               command = self.set_AI,
                                bg = "gray",
                                fg = "black")
         self.ai_human_button.place(x = self.window.winfo_screenwidth() - float(455 / 1920) * self.window.winfo_screenwidth(),
@@ -338,7 +342,7 @@ class GUI(Board):
         self.human_human_button = tk.Button(self.window,
                                text = "Human - Human",
                                font = "Helvetica 14 bold",
-                               command = None,
+                               command = self.unset_AI,
                                bg = "gray",
                                fg = "black")
         self.human_human_button.place(x = self.window.winfo_screenwidth() - float(455 / 1920) * self.window.winfo_screenwidth(),
@@ -354,13 +358,13 @@ class GUI(Board):
                                          fill = "gray",
                                          outline = "gray")
         # Button thuật toán Alpha-Beta
-        self.ab_algorithm_button = tk.Button(self.window, text = "Alpha-Beta", font = "Helvetica 14 bold", command = None, bg = "gray", fg = "black")
+        self.ab_algorithm_button = tk.Button(self.window, text = "Alpha-Beta", font = "Helvetica 14 bold", command = self.set_AI_algorithm, bg = "gray", fg = "black")
         self.ab_algorithm_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(155 / 1920) * self.window.winfo_screenwidth(),
                                 y = self.board_y1 - self.frame_gap + float(730 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
         # Button thuật toán IDS
-        self.ids_algorithm_button = tk.Button(self.window, text = "IDS", font = "Helvetica 14 bold", command = None, bg = "gray", fg = "black")
+        self.ids_algorithm_button = tk.Button(self.window, text = "IDS", font = "Helvetica 14 bold", command = self.unset_AI_algorithm, bg = "gray", fg = "black")
         self.ids_algorithm_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(315 / 1920) * self.window.winfo_screenwidth(),
                                 y = self.board_y1 - self.frame_gap + float(730 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
@@ -377,7 +381,7 @@ class GUI(Board):
         self.ai_first_button = tk.Button(self.window,
                                text = "AI First",
                                font = "Helvetica 14 bold",
-                               command = None,
+                               command = self.set_AI_turn,
                                bg = "gray",
                                fg = "black")
         self.ai_first_button.place(x = self.window.winfo_screenwidth() - float(455 / 1920) * self.window.winfo_screenwidth(),
@@ -388,13 +392,31 @@ class GUI(Board):
         self.human_first_button = tk.Button(self.window,
                                text = "Human First",
                                font = "Helvetica 13 bold",
-                               command = None,
+                               command = self.unset_AI_turn,
                                bg = "gray",
                                fg = "black")
         self.human_first_button.place(x = self.window.winfo_screenwidth() - float(295 / 1920) * self.window.winfo_screenwidth(),
                   y = self.board_y1 - self.frame_gap + float(730 / 1080) * self.window.winfo_screenheight(),
                   width = self.chess_radius * 7,
                   height = self.chess_radius * 3)
+        
+    def set_AI(self):
+        self.AI = True
+        
+    def unset_AI(self):
+        self.AI = False
+    
+    def set_AI_turn(self):
+        self.AI_turn = True
+        
+    def unset_AI_turn(self):
+        self.AI_turn = False
+        
+    def set_AI_algorithm(self):
+        self.AI_algorithm = True
+
+    def unset_AI_algorithm(self):
+        self.AI_algorithm = False    
         
     def game_board(self):
         # Tạo bàn cờ
@@ -463,18 +485,6 @@ class GUI(Board):
                                         y - radius,
                                         x + radius,
                                         y + radius,
-                                        fill = "black",
-                                        outline = "",
-                                        width = width)
-            text_id = self.background.create_text(x,
-                                        y,
-                                        text = count,
-                                        fill = "white")
-        else:
-            circle_id = self.background.create_oval(x - radius,
-                                        y - radius,
-                                        x + radius,
-                                        y + radius,
                                         fill = "white",
                                         outline = "",
                                         width = width)
@@ -482,53 +492,89 @@ class GUI(Board):
                                         y,
                                         text = count,
                                         fill = "black")
+        else:
+            circle_id = self.background.create_oval(x - radius,
+                                        y - radius,
+                                        x + radius,
+                                        y + radius,
+                                        fill = "black",
+                                        outline = "",
+                                        width = width)
+            text_id = self.background.create_text(x,
+                                        y,
+                                        text = count,
+                                        fill = "white")
         self.background.addtag_withtag("circle", circle_id)
         self.background.addtag_withtag("text", text_id)
         self.circles.append(circle_id)
         self.texts.append(text_id)
             
     def start(self):
-
+        if(self.AI_turn):
+            self.piece_num = self.white_piece
+        else:
+            self.piece_num = self.black_piece
+            
         while self.winner == None:
-            self.background.update()
-
-            x = self.click_cord[0]
-            y = self.click_cord[1]
-
+            x = 0
+            y = 0
+            if(self.AI):
+                if(self.AI_turn):
+                    if(self.AI_algorithm):
+                        # Thuật toán 1 => x, y
+                        x = 0
+                        y = 0
+                    else:
+                        # Thuật toán 2
+                        x = 0
+                        y = 0
+                    self.AI_turn = False
+                else:
+                    self.background.update()
+                    x = self.click_cord[0]
+                    y = self.click_cord[1]
+                    self.AI_turn = True 
+            else:
+                self.background.update()
+                x = self.click_cord[0]
+                y = self.click_cord[1]
+            
             picked = self.valid_location(x, y)
-
             if picked:
-                self.turn_label.config(text = "Turn = " + self.turn)
                 self.create_circle(self.board_x1 + self.board_gap_x * (x - 1), self.board_y1 + self.board_gap_y * (y - 1), self.chess_radius, self.turn_num)
                 if self.turn_num % 2 == 1:
                     self.white_cord_picked_x.append(x)
                     self.white_cord_picked_y.append(y)
-                    self.board[y - 1][x - 1] = 1
+                    self.board[y - 1][x - 1] = self.white_piece
                     self.turn = "black"
+                    
                 elif self.turn_num % 2 == 0:
                     self.black_cord_picked_x.append(x)
                     self.black_cord_picked_y.append(y)
-                    self.board[y - 1][x - 1] = 2
+                    self.board[y - 1][x - 1] = self.black_piece
                     self.turn = "white"
-
+                    
                 self.turn_num += 1
-
-                if self.turn == "white":
+                
+                if self.turn == "black":
                     color_check = self.white_piece
                     win_check = "white"
-
-                elif self.turn == "black":
+                    
+                elif self.turn == "white":
                     color_check = self.black_piece
                     win_check = "black"
-
+                    
                 self.winner = self.b.win_check(color_check, win_check, self.board)
                 
         winner_text = self.background.create_text(self.width / 2,
-                                    self.height - self.frame_gap - 25,
-                                    text = self.winner.upper() + " WINS!",
-                                    font = "Helvetica 20 bold",
-                                    fill = self.winner.lower())
+	                                    self.height - self.frame_gap - 25,
+	                                    text = self.winner.upper() + " WINS!",
+	                                    font = "Helvetica 20 bold",
+	                                    fill = self.winner.lower())
+        
         self.background.addtag_withtag("winnertext", winner_text)
+
+    
         
     def restart(self):
         circle_ids = self.background.find_withtag("circle")
@@ -564,8 +610,8 @@ class GUI(Board):
             self.board.append([0] * (self.board_size + 1))
             
         self.unfilled = 0
-        self.black_piece = 1
-        self.white_piece = 2
+        self.white_piece = 1
+        self.black_piece = 2
         
         #Fills Empty List
         for z in range(1, self.board_size + 2):
@@ -587,8 +633,6 @@ class GUI(Board):
         self.turn_num -= 1
             
     def exit(self):
-        global winner
-        winner = "Exit"
         self.window.destroy()
         
 app = GUI()
