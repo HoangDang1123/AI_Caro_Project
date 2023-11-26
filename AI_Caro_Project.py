@@ -7,90 +7,10 @@ import time
 import math
 import numpy as np
 import random
+import asyncio
 
 class Board():
-    # Kiểm tra thắng
-    def win_check(self, Piece_Number, Piece_Colour, board):
-        if self.rowCheck(Piece_Number, board) or self.rowCheck(Piece_Number, self.transpose(board)) or self.rowCheck(Piece_Number, self.transposeDiagonalInc(board)) or self.rowCheck(Piece_Number, self.transposeDiagonalDec(board)):
-            Winner = Piece_Colour
-            return Winner
-
-    def rowCheck(self, Piece_Number, board):
-        for i in range(len(board)):
-            if board[i].count(Piece_Number) >= 5:
-                
-                for z in range(len(board) - 3):
-                    Connection = 0
-
-                    for c in range(5):
-                        if board[i][z + c] == Piece_Number:
-                            Connection += 1
-
-                        else:
-                            break
-
-                        if Connection == 5:
-                            return True
-
-    # Đường chéo giảm
-    def getDiagonalDec(self, loa, digNum):
-        lst=[]
-        if digNum <= len(loa) - 1:
-            index = len(loa) - 1
-            for i in range(digNum, -1, -1):
-                lst.append(loa[i][index])
-                index -= 1
-            return lst
-        else:
-            index = (len(loa) * 2 - 2) - digNum
-            for i in range(len(loa) - 1, digNum - len(loa), -1):
-                lst.append(loa[i][index])
-                index -= 1
-            return lst
-
-    def transposeDiagonalDec(self, loa):
-        lst = []
-        for i in range(len(loa) * 2 - 1):
-            lst.append(self.getDiagonalDec(loa, i))
-        return lst
-
-    # Đường chéo tăng
-    def getDiagonalInc(self, loa, digNum):
-        lst=[]
-        if digNum <= len(loa) - 1:
-            index = 0
-            for i in range(digNum, -1, -1):
-                lst.append(loa[i][index])
-                index += 1
-            return lst
-        else:
-            index =  digNum - len(loa) + 1
-            for i in range(len(loa) - 1, digNum - len(loa), -1):
-                lst.append(loa[i][index])
-                index += 1
-            return lst
-
-    def transposeDiagonalInc(self, loa):
-        lst = []
-        for i in range(len(loa) * 2 - 1):
-            lst.append(self.getDiagonalInc(loa, i))
-        return lst
-
-    def transpose(self, loa):
-        lst = []
-        for i in range(len(loa)):
-            lst.append(self.getCol(loa, i))
-        return lst
-        
-    def getCol(self, loa, colNum):
-        lst = []
-        for i in range(len(loa)):
-            lst.append(loa[i][colNum])
-        return lst
-    
-class Minimax():
     def __init__(self):
-        self.MAX, self.MIN = math.inf, -math.inf
         self.patterns = {
             '11111': 30000000,
             '22222': -30000000,
@@ -124,99 +44,13 @@ class Minimax():
             '00220': -500
         }
     
-    def getCoordsAround(self, board_size, board):
-        '''
-        get points around placed stones
-        '''
-        outTpl = np.nonzero(board)  # return tuple of all non zero points on board
-        potentialValsCoord = {}
-        for i in range(len(outTpl[0])):
-            y = outTpl[0][i]
-            x = outTpl[1][i]
-            if y > 0:
-                potentialValsCoord[(x, y-1)] = 1
-                if x > 0:
-                    potentialValsCoord[(x-1, y-1)] = 1
-                if x < (board_size-1):
-                    potentialValsCoord[(x+1, y-1)] = 1
-            if x > 0:
-                potentialValsCoord[(x-1, y)] = 1
-                if y < (board_size-1):
-                    potentialValsCoord[(x-1, y+1)] = 1
-            if y < (board_size-1):
-                potentialValsCoord[(x, y+1)] = 1
-                if x < (board_size-1):
-                    potentialValsCoord[(x+1, y+1)] = 1
-                if x > 0:
-                    potentialValsCoord[(x-1, y+1)] = 1
-            if x < (board_size-1):
-                potentialValsCoord[(x+1, y)] = 1
-                if y > 0:
-                    potentialValsCoord[(x+1, y-1)] = 1
-        finalValsX, finalValsY = [], []
-        for key in potentialValsCoord:
-            finalValsX.append(key[0])
-            finalValsY.append(key[1])
-        return finalValsX, finalValsY
-
-
-    def convertArrToMove(self, row, col):
-        '''
-        col goes to letter of number plus 1
-        row is number but plus 1
-        '''
-        colVal = chr(col+ord('a'))  # 97
-        rowVal = str(row+1)
-        return colVal+rowVal
-
-
-    def convertMoveToArr(self, col, row):
-        '''
-        convert move ex: a4 to be converted to col and row integers for array
-        '''
-        colVal = ord(col)-ord('a')  # double check
-        rowVal = int(row)-1
-        return colVal, rowVal
-
-
-    def convertKeyToArr(self, key):
-        '''
-        convert key in getcoordsaround func to array indexes
-        '''
-        colVal = ord(key[0])-ord('a')  # double check
-        rowVal = int(key[1:])-1
-        return colVal, rowVal
-
-
-    def getRandomMove(self, board, boardSize):
-        '''
-        For choosing random move when can't decide propogated to center
-        '''
-        ctr = 0
-        idx = boardSize//2
-        while ctr < (idx/2):
-            if board[idx+ctr][idx+ctr] == 0:
-                return idx+ctr, idx+ctr
-            elif board[idx+ctr][idx-ctr] == 0:
-                return idx+ctr, idx-ctr
-            elif board[idx+ctr][idx] == 0:
-                return idx+ctr, idx
-            elif board[idx][idx+ctr] == 0:
-                return idx, idx+ctr
-            elif board[idx][idx-ctr] == 0:
-                return idx, idx-ctr
-            elif board[idx-ctr][idx] == 0:
-                return idx-ctr, idx
-            elif board[idx-ctr][idx-ctr] == 0:
-                return idx-ctr, idx-ctr
-            elif board[idx-ctr][idx+ctr] == 0:
-                return idx-ctr, idx+ctr
-            ctr += 1
-        for i in range(boardSize):
-            for j in range(boardSize):
-                if board[i][j] == 0:
-                    return i, j
-
+    # Kiểm tra thắng
+    def win_check(self, Piece_Number, Piece_Colour, board):
+        point = self.points(board, Piece_Number)
+        if point>=30000000 or point<=-30000000:
+            Winner = Piece_Colour
+            return Winner
+        
     def btsConvert(self, board, player):
         '''
         convert board to col,row,and diag string arrays for easier interpreting 
@@ -269,11 +103,7 @@ class Minimax():
             rList.append(rowVals)
         return dList+cList+rList
 
-
     def points(self, board, player):  # evaluates
-        '''
-        assigns points for moves
-        '''
         val = 0
         player1StrArr = self.btsConvert(board, player)
         for i in range(len(player1StrArr)):
@@ -283,14 +113,104 @@ class Minimax():
                 if(n <= len1):
                     st = player1StrArr[i][j:n]
                     if st in self.patterns:
-                        val += self.patterns[st]
+                        val = max(val, self.patterns[st])
             for j in range(len1):
                 n = j+6
                 if(n <= len1):
                     st = player1StrArr[i][j:n]
                     if st in self.patterns:
-                        val += self.patterns[st]
+                        val = max(val, self.patterns[st])
         return val
+    
+class Minimax():
+    b = Board()
+    def __init__(self):
+        self.MAX, self.MIN = math.inf, -math.inf
+    
+    def getCoordsAround(self, board):
+        '''
+        get points around placed stones
+        '''
+        
+        board_size = len(board)
+        outTpl = np.nonzero(board)  # return tuple of all non zero points on board
+        potentialValsCoord = {}
+
+        for i in range(len(outTpl[0])):
+            y = outTpl[0][i]
+            x = outTpl[1][i]
+    
+            for dy in [-1, 0, 1]:
+                for dx in [-1, 0, 1]:
+                    if dy != 0 or dx != 0:
+                        new_x, new_y = x + dx, y + dy
+                        if 0 <= new_x < board_size and 0 <= new_y < board_size and board[new_y][new_x] == 0:
+                            potentialValsCoord[(new_y, new_x)] = 1
+        
+        finalValsX, finalValsY = [], []
+        for key in potentialValsCoord:
+            finalValsY.append(key[0])
+            finalValsX.append(key[1])
+        
+        return finalValsX, finalValsY
+
+
+    def convertArrToMove(self, row, col):
+        '''
+        col goes to letter of number plus 1
+        row is number but plus 1
+        '''
+        colVal = chr(col+ord('a'))  # 97
+        rowVal = str(row+1)
+        return colVal+rowVal
+
+    def convertMoveToArr(self, col, row):
+        '''
+        convert move ex: a4 to be converted to col and row integers for array
+        '''
+        colVal = ord(col)-ord('a')  # double check
+        rowVal = int(row)-1
+        return colVal, rowVal
+
+
+    def convertKeyToArr(self, key):
+        '''
+        convert key in getcoordsaround func to array indexes
+        '''
+        colVal = ord(key[0])-ord('a')  # double check
+        rowVal = int(key[1:])-1
+        return colVal, rowVal
+
+
+    def getRandomMove(self, board):
+        '''
+        For choosing random move when can't decide propogated to center
+        '''
+        boardSize = len(board)
+        ctr = 0
+        idx = boardSize//2
+        while ctr < (idx/2):
+            if board[idx+ctr][idx+ctr] == 0:
+                return idx+ctr, idx+ctr
+            elif board[idx+ctr][idx-ctr] == 0:
+                return idx+ctr, idx-ctr
+            elif board[idx+ctr][idx] == 0:
+                return idx+ctr, idx
+            elif board[idx][idx+ctr] == 0:
+                return idx, idx+ctr
+            elif board[idx][idx-ctr] == 0:
+                return idx, idx-ctr
+            elif board[idx-ctr][idx] == 0:
+                return idx-ctr, idx
+            elif board[idx-ctr][idx-ctr] == 0:
+                return idx-ctr, idx-ctr
+            elif board[idx-ctr][idx+ctr] == 0:
+                return idx-ctr, idx+ctr
+            ctr += 1
+        for i in range(boardSize):
+            for j in range(boardSize):
+                if board[i][j] == 0:
+                    return i, j
 
     def otherPlayerStone(self, player):
         '''
@@ -305,13 +225,13 @@ class Minimax():
         beta is best already explored option along path to root for minimizer(AI Opponent)
         '''
         
-        point = self.points(board, player)
+        point = self.b.points(board, player)
         if depth == 2 or point>=20000000 or point<=-20000000:
             return point
         size = len(board)
         if isMaximizer:  # THE MAXIMIZER
             best = self.MIN
-            potentialValsX, potentialValsY = self.getCoordsAround(size, board)
+            potentialValsX, potentialValsY = self.getCoordsAround(board)
             for i in range(len(potentialValsX)):
                 if board[potentialValsY[i]][potentialValsX[i]] == 0:
                     board[potentialValsY[i]][potentialValsX[i]] = player
@@ -324,7 +244,7 @@ class Minimax():
             return best
         else:  # THE MINIMIZER
             best = self.MAX
-            potentialValsX, potentialValsY = self.getCoordsAround(size, board)
+            potentialValsX, potentialValsY = self.getCoordsAround(board)
             for i in range(len(potentialValsX)):
                 if board[potentialValsY[i]][potentialValsX[i]] == 0:
                     otherplayer = self.otherPlayerStone(player)
@@ -335,32 +255,22 @@ class Minimax():
                     board[potentialValsY[i]][potentialValsX[i]] = 0  # undoing
                     if beta <= alpha:
                         break
-                    if movePoints > mostPoints:
-                        bestMoveRow = potentialValsY[i]
-                        bestMoveCol = potentialValsX[i]
-                        mostPoints = movePoints
-                        if movePoints >= 20000000:
-                            break
-            if bestMoveRow == -1 or bestMoveCol == -1:  # ' when still -1
-                bestMoveRow, bestMoveCol = self.getRandomMove(board, boardSize)
-            board[bestMoveRow][bestMoveCol] = mark
-            return bestMoveRow, bestMoveCol
             return best
 
-    def computer(self, board_size, board, isComputerFirst):
+    def computer(self, board, isComputerFirst):
         '''
         Chooses best move for computer
         Max that gives index and calls min in minimax 
         '''
         mostPoints = float('-inf')
         alpha,beta = self.MIN, self.MAX
-        if isComputerFirst:
+        if isComputerFirst == 1:
             mark = 1
         else:
             mark = 2
         bestMoveRow = bestMoveCol = -1
-        boardSize = len(board)
-        potentialValsX, potentialValsY = self.getCoordsAround(board_size, board)
+
+        potentialValsX, potentialValsY = self.getCoordsAround(board)
         for i in range(len(potentialValsX)):
             if board[potentialValsY[i]][potentialValsX[i]] == 0:
                 board[potentialValsY[i]][potentialValsX[i]] = mark
@@ -377,9 +287,13 @@ class Minimax():
                     if movePoints >= 20000000:
                         break
         if bestMoveRow == -1 or bestMoveCol == -1:  # ' when still -1
-            bestMoveRow, bestMoveCol = self.getRandomMove(board, boardSize)
-        board[bestMoveRow][bestMoveCol] = mark
+            bestMoveRow, bestMoveCol = self.getRandomMove(board)
+        # board[bestMoveRow][bestMoveCol] = mark
+        global AI_turn
+        AI_turn = False
         return bestMoveRow, bestMoveCol
+
+AI_turn = False
 
 class GUI(Board, Minimax):
     b = Board()
@@ -402,11 +316,10 @@ class GUI(Board, Minimax):
         self.width = 0.52 * self.window.winfo_screenwidth()
         self.height = 0.93 * self.window.winfo_screenheight()
         
-        self.board_size = self.board_size - 1
         self.board_x1 = self.width / 10
         self.board_y1 = self.height / 10
-        self.board_gap_x = (self.width - self.board_x1 * 2) / self.board_size
-        self.board_gap_y = (self.height - self.board_y1 * 2) / self.board_size
+        self.board_gap_x = (self.width - self.board_x1 * 2) / (self.board_size - 1)
+        self.board_gap_y = (self.height - self.board_y1 * 2) / (self.board_size - 1)
         
         #Chess Piece
         self.chess_radius = (self.board_gap_x * (9 / 10)) / 2
@@ -434,20 +347,20 @@ class GUI(Board, Minimax):
         
         #2D Board List
         self.board = []
-        for i in range(self.board_size + 1):
-            self.board.append([0] * (self.board_size + 1))
+        for i in range(self.board_size):
+            self.board.append([0] * (self.board_size))
             
         self.unfilled = 0
         self.white_piece = 1
         self.black_piece = 2
         
         self.AI = False
-        self.AI_turn = False
+        
         self.AI_algorithm = False
         
         #Fills Empty List
-        for z in range(1, self.board_size + 2):
-            for i in range(1, self.board_size + 2):
+        for z in range(1, self.board_size + 1):
+            for i in range(1, self.board_size + 1):
                 self.game_cord_x.append(z)
                 self.game_cord_y.append(i)
                 self.actual_cord_x_1.append((z - 1) * self.board_gap_x + self.board_x1 - self.chess_radius)
@@ -475,7 +388,7 @@ class GUI(Board, Minimax):
                                         image = logo,
                                         bg = "#b69b4c")
         self.university_logo.image = logo
-        self.university_logo.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 230,
+        self.university_logo.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + 230,
                                    y = self.board_y1 - self.frame_gap - 70)
         """
 
@@ -485,7 +398,7 @@ class GUI(Board, Minimax):
                               font = ("Arial", 20, "bold"),
                               fg = "navy blue",
                               bg = "#b69b4c")
-        self.title.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 0.1875 * self.window.winfo_screenwidth(),
+        self.title.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + 0.1875 * self.window.winfo_screenwidth(),
                          y = self.board_y1 - self.frame_gap + 0.028 * self.window.winfo_screenheight())
 
         # Label tên lớp
@@ -494,7 +407,7 @@ class GUI(Board, Minimax):
                                    font = ("Arial", 12, "bold"),
                                    fg = "navy blue",
                                    bg = "#b69b4c")
-        self.class_name.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + 0.078125 * self.window.winfo_screenwidth(),
+        self.class_name.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + 0.078125 * self.window.winfo_screenwidth(),
                               y = self.board_y1 - self.frame_gap + 0.069 * self.window.winfo_screenheight())
 
         # Label tên thành viên
@@ -503,7 +416,7 @@ class GUI(Board, Minimax):
                                     font = ("Arial", 12, "bold"),
                                     fg = "navy blue",
                                     bg = "#b69b4c")
-        self.member_name.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(150 / 1920) * self.window.winfo_screenwidth(),
+        self.member_name.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(150 / 1920) * self.window.winfo_screenwidth(),
                                y = self.board_y1 - self.frame_gap + float(105 / 1080) * self.window.winfo_screenheight())
 
         # Label tên thành viên 1
@@ -512,7 +425,7 @@ class GUI(Board, Minimax):
                                  font = ("Arial", 12, "bold"),
                                  fg = "navy blue",
                                  bg = "#b69b4c")
-        self.member_1.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(420 / 1920) * self.window.winfo_screenwidth(),
+        self.member_1.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(420 / 1920) * self.window.winfo_screenwidth(),
                             y = self.board_y1 - self.frame_gap + float(105 / 1080) * self.window.winfo_screenheight(),)
 
         # Label tên thành viên 2
@@ -520,7 +433,7 @@ class GUI(Board, Minimax):
                                  font = ("Arial", 12, "bold"),
                                  fg = "navy blue",
                                  bg = "#b69b4c")
-        self.member_2.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(420 / 1920) * self.window.winfo_screenwidth(),
+        self.member_2.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(420 / 1920) * self.window.winfo_screenwidth(),
                             y = self.board_y1 - self.frame_gap + float(145 / 1080) * self.window.winfo_screenheight(),)
 
         # Label tên thành viên 3
@@ -528,15 +441,15 @@ class GUI(Board, Minimax):
                                  font = ("Arial", 12, "bold"),
                                  fg = "navy blue",
                                  bg = "#b69b4c")
-        self.member_3.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(420 / 1920) * self.window.winfo_screenwidth(),
+        self.member_3.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(420 / 1920) * self.window.winfo_screenwidth(),
                             y = self.board_y1 - self.frame_gap + float(185 / 1080) * self.window.winfo_screenheight())
         
     def best_line(self):
         # Frame
-        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_y * self.board_size + float(100 / 1920) * self.window.winfo_screenwidth(),
+        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_y * (self.board_size - 1) + float(100 / 1920) * self.window.winfo_screenwidth(),
                                          self.board_y1 - self.frame_gap + float(250 / 1080) * self.window.winfo_screenheight(),
                                          self.window.winfo_screenwidth() - float(100 / 1920) * self.window.winfo_screenwidth(),
-                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - float(430 / 1080) * self.window.winfo_screenheight(),
+                                         self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1) - float(430 / 1080) * self.window.winfo_screenheight(),
                                          width = 3)
         
         # Label
@@ -545,7 +458,7 @@ class GUI(Board, Minimax):
                                         font = ("Arial", 12, "bold"),
                                         fg = "navy blue",
                                         bg = "#b69b4c")
-        self.best_line_label.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(420 / 1920) * self.window.winfo_screenwidth(),
+        self.best_line_label.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(420 / 1920) * self.window.winfo_screenwidth(),
                                    y = self.board_y1 - self.frame_gap + float(255 / 1080) * self.window.winfo_screenheight())
 
         # Text
@@ -554,23 +467,23 @@ class GUI(Board, Minimax):
                                       height =5,
                                       borderwidth = 3,
                                       state = tk.DISABLED)
-        self.best_line_text.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(120 / 1920) * self.window.winfo_screenwidth(),
+        self.best_line_text.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(120 / 1920) * self.window.winfo_screenwidth(),
                                   y = self.board_y1 - self.frame_gap + float(285 / 1080) * self.window.winfo_screenheight())
         
     def button(self):
         # Frame
-        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(100 / 1920) * self.window.winfo_screenwidth(),
+        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(100 / 1920) * self.window.winfo_screenwidth(),
                            self.board_y1 - self.frame_gap + float(440 / 1080) * self.window.winfo_screenheight(),
                            self.window.winfo_screenwidth() - float(100 / 1920) * self.window.winfo_screenwidth(),
-                           self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size,
+                           self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1),
                            fill = "silver",
                            outline = "silver")
 
         # Frame các nút điều khiển chính
-        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(130 / 1920) * self.window.winfo_screenwidth(),
+        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(130 / 1920) * self.window.winfo_screenwidth(),
                                          self.board_y1 - self.frame_gap + float(470 / 1080) * self.window.winfo_screenheight(),
-                                         self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(480 / 1920) * self.window.winfo_screenwidth(),
-                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - float(190 / 1080) * self.window.winfo_screenheight(),
+                                         self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(480 / 1920) * self.window.winfo_screenwidth(),
+                                         self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1) - float(190 / 1080) * self.window.winfo_screenheight(),
                                          fill = "gray",
                                          outline = "gray")
         # Button bắt đầu chơi
@@ -580,7 +493,7 @@ class GUI(Board, Minimax):
                                       command = self.start,
                                       bg = "gray",
                                       fg = "black")
-        self.start_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(155 / 1920) * self.window.winfo_screenwidth(),
+        self.start_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(155 / 1920) * self.window.winfo_screenwidth(),
                                 y = self.board_y1 - self.frame_gap + float(495 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
@@ -591,7 +504,7 @@ class GUI(Board, Minimax):
                                         command = self.restart,
                                         bg = "gray",
                                         fg = "black")
-        self.restart_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(315 / 1920) * self.window.winfo_screenwidth(),
+        self.restart_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(315 / 1920) * self.window.winfo_screenwidth(),
                                 y = self.board_y1 - self.frame_gap + float(495 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
@@ -602,7 +515,7 @@ class GUI(Board, Minimax):
                                         command = self.undo,
                                         bg = "gray",
                                         fg = "black")
-        self.undo_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(155 / 1920) * self.window.winfo_screenwidth(),
+        self.undo_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(155 / 1920) * self.window.winfo_screenwidth(),
                                 y = self.board_y1 - self.frame_gap + float(575 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
@@ -613,7 +526,7 @@ class GUI(Board, Minimax):
                                         command = self.exit,
                                         bg = "gray",
                                         fg = "black")
-        self.exit_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(315 / 1920) * self.window.winfo_screenwidth(),
+        self.exit_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(315 / 1920) * self.window.winfo_screenwidth(),
                                 y = self.board_y1 - self.frame_gap + float(575 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
@@ -622,7 +535,7 @@ class GUI(Board, Minimax):
         self.background.create_rectangle(self.window.winfo_screenwidth() - float(480 / 1920) * self.window.winfo_screenwidth(),
                                          self.board_y1 - self.frame_gap + float(470 / 1080) * self.window.winfo_screenheight(),
                                          self.window.winfo_screenwidth() - float(130 / 1920) * self.window.winfo_screenwidth(),
-                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - float(190 / 1080) * self.window.winfo_screenheight(),
+                                         self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1) - float(190 / 1080) * self.window.winfo_screenheight(),
                                          fill = "gray",
                                          outline = "gray")
         # Button AI chơi với Người
@@ -649,21 +562,21 @@ class GUI(Board, Minimax):
                   height = self.chess_radius * 3)
 
         # Frame các nút chọn thuật toán
-        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(130 / 1920) * self.window.winfo_screenwidth(),
+        self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(130 / 1920) * self.window.winfo_screenwidth(),
                                          self.board_y1 - self.frame_gap + float(700 / 1080) * self.window.winfo_screenheight(),
-                                         self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(480 / 1920) * self.window.winfo_screenwidth(),
-                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - float(30 / 1080) * self.window.winfo_screenheight(),
+                                         self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(480 / 1920) * self.window.winfo_screenwidth(),
+                                         self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1) - float(30 / 1080) * self.window.winfo_screenheight(),
                                          fill = "gray",
                                          outline = "gray")
         # Button thuật toán Alpha-Beta
         self.ab_algorithm_button = tk.Button(self.window, text = "Alpha-Beta", font = "Helvetica 14 bold", command = self.set_AI_algorithm, bg = "gray", fg = "black")
-        self.ab_algorithm_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(155 / 1920) * self.window.winfo_screenwidth(),
+        self.ab_algorithm_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(155 / 1920) * self.window.winfo_screenwidth(),
                                 y = self.board_y1 - self.frame_gap + float(730 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
         # Button thuật toán IDS
         self.ids_algorithm_button = tk.Button(self.window, text = "IDS", font = "Helvetica 14 bold", command = self.unset_AI_algorithm, bg = "gray", fg = "black")
-        self.ids_algorithm_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size + float(315 / 1920) * self.window.winfo_screenwidth(),
+        self.ids_algorithm_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(315 / 1920) * self.window.winfo_screenwidth(),
                                 y = self.board_y1 - self.frame_gap + float(730 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
@@ -672,7 +585,7 @@ class GUI(Board, Minimax):
         self.background.create_rectangle(self.window.winfo_screenwidth() - float(480 / 1920) * self.window.winfo_screenwidth(),
                                          self.board_y1 - self.frame_gap + float(700 / 1080) * self.window.winfo_screenheight(),
                                          self.window.winfo_screenwidth() - float(130 / 1920) * self.window.winfo_screenwidth(),
-                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size - float(30 / 1080) * self.window.winfo_screenheight(),
+                                         self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1) - float(30 / 1080) * self.window.winfo_screenheight(),
                                          fill = "gray",
                                          outline = "gray")
         # Button AI đánh trước
@@ -705,10 +618,12 @@ class GUI(Board, Minimax):
         self.AI = False
     
     def set_AI_turn(self):
-        self.AI_turn = True
+        global AI_turn
+        AI_turn = True
         
     def unset_AI_turn(self):
-        self.AI_turn = False
+        global AI_turn
+        AI_turn = False
         
     def set_AI_algorithm(self):
         self.AI_algorithm = True
@@ -720,29 +635,31 @@ class GUI(Board, Minimax):
         # Tạo bàn cờ
         self.background.create_rectangle(self.board_x1 - self.frame_gap,
                                          self.board_y1 - self.frame_gap,
-                                         self.board_x1 + self.frame_gap + self.board_gap_x * self.board_size,
-                                         self.board_y1 + self.frame_gap + self.board_gap_y * self.board_size,
+                                         self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1),
+                                         self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1),
                                          width = 3)
         
         letter = 64
-        for f in range(self.board_size + 1):
+        for f in range(self.board_size):
             self.background.create_line(self.board_x1,
                           self.board_y1 + f * self.board_gap_y,
-                          self.board_x1 + self.board_gap_x * self.board_size,
+                          self.board_x1 + self.board_gap_x * (self.board_size - 1),
                           self.board_y1 + f * self.board_gap_y)
             self.background.create_line(self.board_x1 + f * self.board_gap_x,
                           self.board_y1,
                           self.board_x1 + f * self.board_gap_x,
-                          self.board_y1 + self.board_gap_y * self.board_size)
+                          self.board_y1 + self.board_gap_y * (self.board_size - 1))
 
             self.background.create_text(self.board_x1 - self.frame_gap * 1.7,
                                         self.board_y1 + f * self.board_gap_y,
-                                        text = chr(letter + 1),
+                                        #text = chr(letter + 1),
+                                        text = f,
                                         font = "Helvetica 10 bold",
                                         fill = "black")
             self.background.create_text(self.board_x1 + f * self.board_gap_x,
                                         self.board_y1 - self.frame_gap * 1.7,
-                                        text = f + 1,
+                                        #text = f + 1,
+                                        text = f,
                                         font = "Helvetica 10 bold",
                                         fill = "black")
             letter += 1
@@ -758,6 +675,10 @@ class GUI(Board, Minimax):
         x_click = event.x
         y_click = event.y
         self.click_cord = self.piece_location(x_click, y_click)
+        picked = self.valid_location(self.click_cord[0], self.click_cord[1])
+        if picked:
+            global AI_turn
+            AI_turn = True
     
     # Tọa độ chấm caro
     def piece_location(self, x_click, y_click):    
@@ -808,39 +729,40 @@ class GUI(Board, Minimax):
         self.texts.append(text_id)
             
     def start(self):
-        if(self.AI_turn):
+        if(AI_turn):
             self.piece_num = self.white_piece
         else:
             self.piece_num = self.black_piece
-            
             
         while self.winner == None:
             x = 0
             y = 0
             if(self.AI):
-                if(self.AI_turn):
+                if(AI_turn):
                     if(self.AI_algorithm):
-                        x, y = self.m.computer(self.board_size, self.board, self.AI_turn)
-                        print(x, y)
+                        x, y = self.m.computer(self.board, self.piece_num)
+                        x += 1
+                        y += 1
+                        
                     else:
                         # Thuật toán 2
                         x = 0
                         y = 0
-                    self.AI_turn = False
+
                 else:
                     self.background.update()
                     x = self.click_cord[0]
                     y = self.click_cord[1]
-                    self.AI_turn = True 
             else:
                 self.background.update()
                 x = self.click_cord[0]
                 y = self.click_cord[1]
-            
+                
             picked = self.valid_location(x, y)
             if picked:
                 self.create_circle(self.board_x1 + self.board_gap_x * (x - 1), self.board_y1 + self.board_gap_y * (y - 1), self.chess_radius, self.turn_num)
                 if self.turn_num % 2 == 1:
+                    
                     self.white_cord_picked_x.append(x)
                     self.white_cord_picked_y.append(y)
                     self.board[y - 1][x - 1] = self.white_piece
@@ -851,7 +773,6 @@ class GUI(Board, Minimax):
                     self.black_cord_picked_y.append(y)
                     self.board[y - 1][x - 1] = self.black_piece
                     self.turn = "white"
-                    
                 self.turn_num += 1
                 
                 if self.turn == "black":
@@ -887,7 +808,7 @@ class GUI(Board, Minimax):
         self.turn_num = 1
         self.turn = "white"
         self.winner = None
-
+        """
         #Cord List
         self.black_cord_picked_x = []
         self.black_cord_picked_y = []
@@ -920,7 +841,7 @@ class GUI(Board, Minimax):
                 self.actual_cord_y_1.append((i - 1) * self.board_gap_y + self.board_y1 - self.chess_radius)
                 self.actual_cord_x_2.append((z - 1) * self.board_gap_x + self.board_x1 + self.chess_radius)
                 self.actual_cord_y_2.append((i - 1) * self.board_gap_y + self.board_y1 + self.chess_radius)
-                
+        """
     def undo(self):
         circle = self.circles.pop()
         self.background.delete(circle)
