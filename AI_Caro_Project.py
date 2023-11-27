@@ -46,8 +46,8 @@ class Board():
     
     # Kiểm tra thắng
     def win_check(self, Piece_Number, Piece_Colour, board):
-        point = self.points(board, Piece_Number)
-        if point>=30000000 or point<=-30000000:
+        point = self.points_check(board, Piece_Number)
+        if point == 30000000:
             Winner = Piece_Colour
             return Winner
         
@@ -103,7 +103,7 @@ class Board():
             rList.append(rowVals)
         return dList+cList+rList
 
-    def points(self, board, player):  # evaluates
+    def points_check(self, board, player):  # evaluates
         val = 0
         player1StrArr = self.btsConvert(board, player)
         for i in range(len(player1StrArr)):
@@ -122,31 +122,47 @@ class Board():
                         val = max(val, self.patterns[st])
         return val
     
+    def points(self, board, player):  # evaluates
+        val = 0
+        player1StrArr = self.btsConvert(board, player)
+        for i in range(len(player1StrArr)):
+            len1 = len(player1StrArr[i])
+            for j in range(len1):
+                n = j+5
+                if(n <= len1):
+                    st = player1StrArr[i][j:n]
+                    if st in self.patterns:
+                        val += self.patterns[st]
+            for j in range(len1):
+                n = j+6
+                if(n <= len1):
+                    st = player1StrArr[i][j:n]
+                    if st in self.patterns:
+                        val += self.patterns[st]
+        return val
+    
 class Minimax():
     b = Board()
     def __init__(self):
         self.MAX, self.MIN = math.inf, -math.inf
     
     def getCoordsAround(self, board):
-        '''
-        get points around placed stones
-        '''
-        
         board_size = len(board)
         outTpl = np.nonzero(board)  # return tuple of all non zero points on board
         potentialValsCoord = {}
 
+        temp_board = np.array(board)
+
         for i in range(len(outTpl[0])):
-            y = outTpl[0][i]
-            x = outTpl[1][i]
-    
+            x = outTpl[0][i]
+            y = outTpl[1][i]
+
             for dy in [-1, 0, 1]:
                 for dx in [-1, 0, 1]:
-                    if dy != 0 or dx != 0:
-                        new_x, new_y = x + dx, y + dy
-                        if 0 <= new_x < board_size and 0 <= new_y < board_size and board[new_y][new_x] == 0:
-                            potentialValsCoord[(new_y, new_x)] = 1
-        
+                    new_x, new_y = x + dx, y + dy
+                    if 0 <= new_x < board_size and 0 <= new_y < board_size and temp_board[new_y][new_x] == 0:
+                        potentialValsCoord[(new_y, new_x)] = 1
+
         finalValsX, finalValsY = [], []
         for key in potentialValsCoord:
             finalValsY.append(key[0])
@@ -226,9 +242,9 @@ class Minimax():
         '''
         
         point = self.b.points(board, player)
-        if depth == 2 or point>=20000000 or point<=-20000000:
+        if depth == 2 or point >= 20000000 or point <= -20000000:
             return point
-        size = len(board)
+
         if isMaximizer:  # THE MAXIMIZER
             best = self.MIN
             potentialValsX, potentialValsY = self.getCoordsAround(board)
@@ -262,6 +278,7 @@ class Minimax():
         Chooses best move for computer
         Max that gives index and calls min in minimax 
         '''
+        print(board)
         mostPoints = float('-inf')
         alpha,beta = self.MIN, self.MAX
         if isComputerFirst == 1:
@@ -288,7 +305,7 @@ class Minimax():
                         break
         if bestMoveRow == -1 or bestMoveCol == -1:  # ' when still -1
             bestMoveRow, bestMoveCol = self.getRandomMove(board)
-        # board[bestMoveRow][bestMoveCol] = mark
+
         global AI_turn
         AI_turn = False
         return bestMoveRow, bestMoveCol
@@ -652,14 +669,15 @@ class GUI(Board, Minimax):
 
             self.background.create_text(self.board_x1 - self.frame_gap * 1.7,
                                         self.board_y1 + f * self.board_gap_y,
-                                        #text = chr(letter + 1),
-                                        text = f,
+                                        # text = chr(letter + 1),
+                                        text = f + 1,
+                                        # text = f,
                                         font = "Helvetica 10 bold",
                                         fill = "black")
             self.background.create_text(self.board_x1 + f * self.board_gap_x,
                                         self.board_y1 - self.frame_gap * 1.7,
-                                        #text = f + 1,
-                                        text = f,
+                                        text = f + 1,
+                                        # text = f,
                                         font = "Helvetica 10 bold",
                                         fill = "black")
             letter += 1
@@ -740,10 +758,9 @@ class GUI(Board, Minimax):
             if(self.AI):
                 if(AI_turn):
                     if(self.AI_algorithm):
-                        x, y = self.m.computer(self.board, self.piece_num)
+                        y, x = self.m.computer(self.board, self.piece_num)
                         x += 1
                         y += 1
-                        
                     else:
                         # Thuật toán 2
                         x = 0
