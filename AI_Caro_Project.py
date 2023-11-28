@@ -52,9 +52,6 @@ class Board():
             return Winner
         
     def btsConvert(self, board, player):
-        '''
-        convert board to col,row,and diag string arrays for easier interpreting 
-        '''
         temp_board = np.array(board)
         cList, rList, dList = [], [], []
         board_col = len(board[0])
@@ -172,36 +169,23 @@ class Minimax():
 
 
     def convertArrToMove(self, row, col):
-        '''
-        col goes to letter of number plus 1
-        row is number but plus 1
-        '''
         colVal = chr(col+ord('a'))  # 97
         rowVal = str(row+1)
         return colVal+rowVal
 
     def convertMoveToArr(self, col, row):
-        '''
-        convert move ex: a4 to be converted to col and row integers for array
-        '''
         colVal = ord(col)-ord('a')  # double check
         rowVal = int(row)-1
         return colVal, rowVal
 
 
     def convertKeyToArr(self, key):
-        '''
-        convert key in getcoordsaround func to array indexes
-        '''
         colVal = ord(key[0])-ord('a')  # double check
         rowVal = int(key[1:])-1
         return colVal, rowVal
 
 
     def getRandomMove(self, board):
-        '''
-        For choosing random move when can't decide propogated to center
-        '''
         boardSize = len(board)
         ctr = 0
         idx = boardSize//2
@@ -229,18 +213,9 @@ class Minimax():
                     return i, j
 
     def otherPlayerStone(self, player):
-        '''
-        Stones are 1 or 2 based on player. Just gets other player's stone
-        '''
         return 2 if player==1 else 1
 
-    def minimax(self, board, isMaximizer, depth, alpha, beta, player):  # alpha, beta
-        '''
-        Minimax with Alpha-Beta pruning (also computer is 1st Max in this implementation)
-        alpha is best already explored option along path to root for maximizer(AI)
-        beta is best already explored option along path to root for minimizer(AI Opponent)
-        '''
-        
+    def minimax(self, board, isMaximizer, depth, alpha, beta, player):
         point = self.b.points(board, player)
         if depth == 2 or point >= 20000000 or point <= -20000000:
             return point
@@ -316,7 +291,7 @@ class GUI(Board, Minimax):
         self.background = tk.Canvas(
             self.window,
             width = self.window.winfo_screenwidth(),
-            height = self.window.winfo_screenheight() - float(100 / 1080) * self.window.winfo_screenheight(),
+            height = self.window.winfo_screenheight(),
             background= "#b69b4c"
             )
         self.background.pack()
@@ -396,7 +371,7 @@ class GUI(Board, Minimax):
         
     def introduction(self):
         # LabelHCMUTE logo
-        """
+        
         logo = tk.PhotoImage(file="./image/hcmute.png")
         self.university_logo = tk.Label(self.window,
                                         image = logo,
@@ -404,8 +379,7 @@ class GUI(Board, Minimax):
         self.university_logo.image = logo
         self.university_logo.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + 230,
                                    y = self.board_y1 - self.frame_gap - 70)
-        """
-
+        
         # Label tiêu đề
         self.title = tk.Label(self.window,
                               text = "ĐỒ ÁN CUỐI KỲ",
@@ -682,8 +656,7 @@ class GUI(Board, Minimax):
 
             self.background.create_text(self.board_x1 - self.frame_gap * 1.7,
                                         self.board_y1 + f * self.board_gap_y,
-                                        # text = chr(letter + 1),
-                                        text = f + 1,
+                                        text = chr(letter + 1),
                                         font = "Helvetica 10 bold",
                                         fill = "black")
             self.background.create_text(self.board_x1 + f * self.board_gap_x,
@@ -820,12 +793,30 @@ class GUI(Board, Minimax):
                             win_check = "black"
                             
                         self.winner = self.b.win_check(color_check, win_check, self.board)
-                        
-                winner_text = self.background.create_text(self.width / 2,
-        	                                    self.height - self.frame_gap - 25,
-        	                                    text = self.winner.upper() + " WINS!",
-        	                                    font = "Helvetica 20 bold",
-        	                                    fill = self.winner.lower())
+                if self.AI == True:
+                    win = ""
+                    if AI_turn == False:
+                        if self.winner == "white":
+                            win = "AI"
+                        else:
+                            win = "Human"
+                    else:
+                        if self.winner == "black":
+                            win = "AI"
+                        else:
+                            win = "Human"
+                            
+                    winner_text = self.background.create_text(self.width / 2,
+            	                                    self.height - self.frame_gap - 25,
+            	                                    text = win + " WINS!",
+            	                                    font = "Helvetica 20 bold",
+                                                    fill = self.winner)
+                else:
+                    winner_text = self.background.create_text(self.width / 2,
+            	                                    self.height - self.frame_gap - 25,
+            	                                    text = self.winner.upper() + " WINS!",
+            	                                    font = "Helvetica 20 bold",
+                                                    fill = self.winner)
                 
                 self.background.addtag_withtag("winnertext", winner_text)
         
