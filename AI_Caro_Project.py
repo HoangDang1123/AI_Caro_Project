@@ -274,11 +274,6 @@ class Minimax():
             return best
 
     def computer(self, board, isComputerFirst):
-        '''
-        Chooses best move for computer
-        Max that gives index and calls min in minimax 
-        '''
-        print(board)
         mostPoints = float('-inf')
         alpha,beta = self.MIN, self.MAX
         if isComputerFirst == 1:
@@ -371,8 +366,10 @@ class GUI(Board, Minimax):
         self.white_piece = 1
         self.black_piece = 2
         
-        self.AI = False
+        self.playwith = False
+        self.gofirst = False
         
+        self.AI = False
         self.AI_algorithm = False
         
         #Fills Empty List
@@ -630,23 +627,39 @@ class GUI(Board, Minimax):
         
     def set_AI(self):
         self.AI = True
+        self.ai_human_button.config(bg = "white")
+        self.human_human_button.config(bg = "gray")
+        self.playwith = True
         
     def unset_AI(self):
         self.AI = False
+        self.ai_human_button.config(bg = "gray")
+        self.human_human_button.config(bg = "white")
+        self.playwith = True
     
     def set_AI_turn(self):
         global AI_turn
         AI_turn = True
+        self.ai_first_button.config(bg = "white")
+        self.human_first_button.config(bg = "gray")
+        self.gofirst = True
         
     def unset_AI_turn(self):
         global AI_turn
         AI_turn = False
+        self.ai_first_button.config(bg = "gray")
+        self.human_first_button.config(bg = "white")
+        self.gofirst = True
         
     def set_AI_algorithm(self):
         self.AI_algorithm = True
+        self.ab_algorithm_button.config(bg = "white")
+        self.ids_algorithm_button.config(bg = "gray")
 
     def unset_AI_algorithm(self):
         self.AI_algorithm = False    
+        self.ab_algorithm_button.config(bg = "gray")
+        self.ids_algorithm_button.config(bg = "white")
         
     def game_board(self):
         # Tạo bàn cờ
@@ -671,13 +684,11 @@ class GUI(Board, Minimax):
                                         self.board_y1 + f * self.board_gap_y,
                                         # text = chr(letter + 1),
                                         text = f + 1,
-                                        # text = f,
                                         font = "Helvetica 10 bold",
                                         fill = "black")
             self.background.create_text(self.board_x1 + f * self.board_gap_x,
                                         self.board_y1 - self.frame_gap * 1.7,
                                         text = f + 1,
-                                        # text = f,
                                         font = "Helvetica 10 bold",
                                         fill = "black")
             letter += 1
@@ -747,70 +758,76 @@ class GUI(Board, Minimax):
         self.texts.append(text_id)
             
     def start(self):
-        if(AI_turn):
-            self.piece_num = self.white_piece
+        if self.playwith == False:
+            tk.messagebox.showerror("Error!!!", "Please select AI vs Human or Human vs Human")
         else:
-            self.piece_num = self.black_piece
-            
-        while self.winner == None:
-            x = 0
-            y = 0
-            if(self.AI):
-                if(AI_turn):
-                    if(self.AI_algorithm):
-                        y, x = self.m.computer(self.board, self.piece_num)
-                        x += 1
-                        y += 1
-                    else:
-                        # Thuật toán 2
-                        x = 0
-                        y = 0
-
-                else:
-                    self.background.update()
-                    x = self.click_cord[0]
-                    y = self.click_cord[1]
+            if self.AI == True and self.gofirst == False:
+                tk.messagebox.showerror("Error!!!", "Please select AI First or Human First")
             else:
-                self.background.update()
-                x = self.click_cord[0]
-                y = self.click_cord[1]
+                self.start_button.config(bg = "white")
                 
-            picked = self.valid_location(x, y)
-            if picked:
-                self.create_circle(self.board_x1 + self.board_gap_x * (x - 1), self.board_y1 + self.board_gap_y * (y - 1), self.chess_radius, self.turn_num)
-                if self.turn_num % 2 == 1:
+                self.click_cord = [None, None]
+                if(AI_turn):
+                    self.piece_num = self.white_piece
+                else:
+                    self.piece_num = self.black_piece
                     
-                    self.white_cord_picked_x.append(x)
-                    self.white_cord_picked_y.append(y)
-                    self.board[y - 1][x - 1] = self.white_piece
-                    self.turn = "black"
-                    
-                elif self.turn_num % 2 == 0:
-                    self.black_cord_picked_x.append(x)
-                    self.black_cord_picked_y.append(y)
-                    self.board[y - 1][x - 1] = self.black_piece
-                    self.turn = "white"
-                self.turn_num += 1
-                
-                if self.turn == "black":
-                    color_check = self.white_piece
-                    win_check = "white"
-                    
-                elif self.turn == "white":
-                    color_check = self.black_piece
-                    win_check = "black"
-                    
-                self.winner = self.b.win_check(color_check, win_check, self.board)
-                
-        winner_text = self.background.create_text(self.width / 2,
-	                                    self.height - self.frame_gap - 25,
-	                                    text = self.winner.upper() + " WINS!",
-	                                    font = "Helvetica 20 bold",
-	                                    fill = self.winner.lower())
+                while self.winner == None:
+                    x = 0
+                    y = 0
+                    if(self.AI):
+                        if(AI_turn):
+                            if(self.AI_algorithm):
+                                y, x = self.m.computer(self.board, self.piece_num)
+                                x += 1
+                                y += 1
+                            else:
+                                # Thuật toán 2
+                                x = 0
+                                y = 0
         
-        self.background.addtag_withtag("winnertext", winner_text)
-
-    
+                        else:
+                            self.background.update()
+                            x = self.click_cord[0]
+                            y = self.click_cord[1]
+                    else:
+                        self.background.update()
+                        x = self.click_cord[0]
+                        y = self.click_cord[1]
+                        
+                    picked = self.valid_location(x, y)
+                    if picked:
+                        self.create_circle(self.board_x1 + self.board_gap_x * (x - 1), self.board_y1 + self.board_gap_y * (y - 1), self.chess_radius, self.turn_num)
+                        if self.turn_num % 2 == 1:
+                            self.white_cord_picked_x.append(x)
+                            self.white_cord_picked_y.append(y)
+                            self.board[y - 1][x - 1] = self.white_piece
+                            self.turn = "black"
+                            
+                        elif self.turn_num % 2 == 0:
+                            self.black_cord_picked_x.append(x)
+                            self.black_cord_picked_y.append(y)
+                            self.board[y - 1][x - 1] = self.black_piece
+                            self.turn = "white"
+                        self.turn_num += 1
+                        
+                        if self.turn == "black":
+                            color_check = self.white_piece
+                            win_check = "white"
+                            
+                        elif self.turn == "white":
+                            color_check = self.black_piece
+                            win_check = "black"
+                            
+                        self.winner = self.b.win_check(color_check, win_check, self.board)
+                        
+                winner_text = self.background.create_text(self.width / 2,
+        	                                    self.height - self.frame_gap - 25,
+        	                                    text = self.winner.upper() + " WINS!",
+        	                                    font = "Helvetica 20 bold",
+        	                                    fill = self.winner.lower())
+                
+                self.background.addtag_withtag("winnertext", winner_text)
         
     def restart(self):
         circle_ids = self.background.find_withtag("circle")
@@ -822,10 +839,23 @@ class GUI(Board, Minimax):
         winner_text = self.background.find_withtag("winnertext")
         self.background.delete(*winner_text)
         
+        self.start_button.config(bg = "gray")
+        self.ai_human_button.config(bg = "gray")
+        self.human_human_button.config(bg = "gray")
+        self.ai_first_button.config(bg = "gray")
+        self.human_first_button.config(bg = "gray")
+        self.ab_algorithm_button.config(bg = "gray")
+        self.ids_algorithm_button.config(bg = "gray")
+        
+        self.playwith = False
+        self.gofirst = False
+        self.AI = False
+        self.AI_turn = False
+        self.AI_algorithm = False
+        
         self.turn_num = 1
         self.turn = "white"
         self.winner = None
-        """
         #Cord List
         self.black_cord_picked_x = []
         self.black_cord_picked_y = []
@@ -842,31 +872,54 @@ class GUI(Board, Minimax):
         
         #2D Board List
         self.board = []
-        for i in range(self.board_size + 1):
-            self.board.append([0] * (self.board_size + 1))
+        for i in range(self.board_size):
+            self.board.append([0] * (self.board_size))
             
         self.unfilled = 0
         self.white_piece = 1
         self.black_piece = 2
         
+        self.AI = False
+        
+        self.AI_algorithm = False
+        
         #Fills Empty List
-        for z in range(1, self.board_size + 2):
-            for i in range(1, self.board_size + 2):
+        for z in range(1, self.board_size + 1):
+            for i in range(1, self.board_size + 1):
                 self.game_cord_x.append(z)
                 self.game_cord_y.append(i)
                 self.actual_cord_x_1.append((z - 1) * self.board_gap_x + self.board_x1 - self.chess_radius)
                 self.actual_cord_y_1.append((i - 1) * self.board_gap_y + self.board_y1 - self.chess_radius)
                 self.actual_cord_x_2.append((z - 1) * self.board_gap_x + self.board_x1 + self.chess_radius)
                 self.actual_cord_y_2.append((i - 1) * self.board_gap_y + self.board_y1 + self.chess_radius)
-        """
-    def undo(self):
+        
+        self.background.bind("<Button-1>", self.mouse_click)
+        self.click_cord = [None, None]
+        
+    def delete_circle(self):
         circle = self.circles.pop()
         self.background.delete(circle)
-        
         text = self.texts.pop()
         self.background.delete(text)
         
-        self.turn_num -= 1
+    def undo(self):
+        if len(self.circles) > 0 and len(self.texts) > 0 and self.turn_num > 0:
+            print(self.circles)
+            self.delete_circle()
+            print(self.circles)
+            print("----")
+            
+            if self.turn_num % 2 == 0 and len(self.white_cord_picked_x) > 0:
+                x = self.white_cord_picked_x[-1] - 1
+                y = self.white_cord_picked_y[-1] - 1
+                self.board[y][x] = 0
+            elif self.turn_num % 2 == 1 and len(self.black_cord_picked_y) > 0:
+                x = self.black_cord_picked_x[-1] - 1
+                y = self.black_cord_picked_y[-1] - 1
+                self.board[y][x] = 0
+                
+            print(self.board)
+            self.turn_num -= 1
             
     def exit(self):
         self.window.destroy()
