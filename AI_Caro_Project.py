@@ -186,30 +186,40 @@ class Minimax():
 
 
     def getRandomMove(self, board):
+        global AI_turn
         boardSize = len(board)
         ctr = 0
         idx = boardSize//2
         while ctr < (idx/2):
             if board[idx+ctr][idx+ctr] == 0:
+                AI_turn = False
                 return idx+ctr, idx+ctr
             elif board[idx+ctr][idx-ctr] == 0:
+                AI_turn = False
                 return idx+ctr, idx-ctr
             elif board[idx+ctr][idx] == 0:
+                AI_turn = False
                 return idx+ctr, idx
             elif board[idx][idx+ctr] == 0:
+                AI_turn = False
                 return idx, idx+ctr
             elif board[idx][idx-ctr] == 0:
+                AI_turn = False
                 return idx, idx-ctr
             elif board[idx-ctr][idx] == 0:
+                AI_turn = False
                 return idx-ctr, idx
             elif board[idx-ctr][idx-ctr] == 0:
+                AI_turn = False
                 return idx-ctr, idx-ctr
             elif board[idx-ctr][idx+ctr] == 0:
+                AI_turn = False
                 return idx-ctr, idx+ctr
             ctr += 1
         for i in range(boardSize):
             for j in range(boardSize):
                 if board[i][j] == 0:
+                    AI_turn = False
                     return i, j
 
     def otherPlayerStone(self, player):
@@ -343,6 +353,7 @@ class GUI(Board, Minimax):
         
         self.playwith = False
         self.gofirst = False
+        self.AIfirst = False
         
         self.AI = False
         self.AI_algorithm = False
@@ -371,7 +382,7 @@ class GUI(Board, Minimax):
         
     def introduction(self):
         # LabelHCMUTE logo
-        
+        """
         logo = tk.PhotoImage(file="./image/hcmute.png")
         self.university_logo = tk.Label(self.window,
                                         image = logo,
@@ -379,7 +390,7 @@ class GUI(Board, Minimax):
         self.university_logo.image = logo
         self.university_logo.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + 230,
                                    y = self.board_y1 - self.frame_gap - 70)
-        
+        """
         # Label tiêu đề
         self.title = tk.Label(self.window,
                               text = "ĐỒ ÁN CUỐI KỲ",
@@ -612,28 +623,42 @@ class GUI(Board, Minimax):
         self.playwith = True
     
     def set_AI_turn(self):
-        global AI_turn
-        AI_turn = True
-        self.ai_first_button.config(bg = "white")
-        self.human_first_button.config(bg = "gray")
-        self.gofirst = True
+        if self.AI == False:
+            tk.messagebox.showerror("Error!!!","Please select AI vs Human!")
+        else:
+            global AI_turn
+            AI_turn = True
+            self.ai_first_button.config(bg = "white")
+            self.human_first_button.config(bg = "gray")
+            self.gofirst = True
+            self.AIfirst = True
         
     def unset_AI_turn(self):
-        global AI_turn
-        AI_turn = False
-        self.ai_first_button.config(bg = "gray")
-        self.human_first_button.config(bg = "white")
-        self.gofirst = True
+        if self.AI == False:
+            tk.messagebox.showerror("Error!!!","Please select AI vs Human!")
+        else:
+            global AI_turn
+            AI_turn = False
+            self.ai_first_button.config(bg = "gray")
+            self.human_first_button.config(bg = "white")
+            self.gofirst = True
+            self.AIfirst = False
         
     def set_AI_algorithm(self):
-        self.AI_algorithm = True
-        self.ab_algorithm_button.config(bg = "white")
-        self.ids_algorithm_button.config(bg = "gray")
+        if self.AI == False:
+            tk.messagebox.showerror("Error!!!","Please select AI vs Human!")
+        else:
+            self.AI_algorithm = True
+            self.ab_algorithm_button.config(bg = "white")
+            self.ids_algorithm_button.config(bg = "gray")
 
     def unset_AI_algorithm(self):
-        self.AI_algorithm = False    
-        self.ab_algorithm_button.config(bg = "gray")
-        self.ids_algorithm_button.config(bg = "white")
+        if self.AI == False:
+            tk.messagebox.showerror("Error!!!","Please select AI vs Human!")
+        else:
+            self.AI_algorithm = False    
+            self.ab_algorithm_button.config(bg = "gray")
+            self.ids_algorithm_button.config(bg = "white")
         
     def game_board(self):
         # Tạo bàn cờ
@@ -745,13 +770,19 @@ class GUI(Board, Minimax):
                 else:
                     self.piece_num = self.black_piece
                     
+                moveNum = 0
                 while self.winner == None:
                     x = 0
                     y = 0
                     if(self.AI):
                         if(AI_turn):
                             if(self.AI_algorithm):
-                                y, x = self.m.computer(self.board, self.piece_num)
+                                moveNum += 1
+                                if moveNum == 1:
+                                    y, x = self.m.getRandomMove(self.board)
+                                    print(y, x)
+                                else:
+                                    y, x = self.m.computer(self.board, self.piece_num)
                                 x += 1
                                 y += 1
                             else:
@@ -795,13 +826,13 @@ class GUI(Board, Minimax):
                         self.winner = self.b.win_check(color_check, win_check, self.board)
                 if self.AI == True:
                     win = ""
-                    if AI_turn == False:
-                        if self.winner == "white":
+                    if self.AIfirst == True:
+                        if self.turn == "black":
                             win = "AI"
                         else:
                             win = "Human"
                     else:
-                        if self.winner == "black":
+                        if self.turn == "white":
                             win = "AI"
                         else:
                             win = "Human"
@@ -840,6 +871,7 @@ class GUI(Board, Minimax):
         
         self.playwith = False
         self.gofirst = False
+        self.AIfirst = False
         self.AI = False
         self.AI_turn = False
         self.AI_algorithm = False
@@ -895,11 +927,9 @@ class GUI(Board, Minimax):
         
     def undo(self):
         if len(self.circles) > 0 and len(self.texts) > 0 and self.turn_num > 0:
-            print(self.circles)
             self.delete_circle()
-            print(self.circles)
-            print("----")
             
+            """
             if self.turn_num % 2 == 0 and len(self.white_cord_picked_x) > 0:
                 x = self.white_cord_picked_x[-1] - 1
                 y = self.white_cord_picked_y[-1] - 1
@@ -908,8 +938,8 @@ class GUI(Board, Minimax):
                 x = self.black_cord_picked_x[-1] - 1
                 y = self.black_cord_picked_y[-1] - 1
                 self.board[y][x] = 0
-                
-            print(self.board)
+            
+            """
             self.turn_num -= 1
             
     def exit(self):
