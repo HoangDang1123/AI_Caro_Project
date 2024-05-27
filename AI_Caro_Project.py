@@ -9,6 +9,8 @@ import numpy as np
 import random
 import asyncio
 
+AI_turn = False
+
 class Board():
     def __init__(self):
         self.patterns = {
@@ -53,10 +55,13 @@ class Board():
         
     def btsConvert(self, board, player):
         temp_board = np.array(board)
+        
         cList, rList, dList = [], [], []
-        board_col = len(board[0])
+        board_col = len(temp_board[0])
+        
         bdiag = [temp_board.diagonal(i) for i in range(board_col - 5, - board_col + 4, -1)]
         fdiag = [temp_board[::-1, :].diagonal(i) for i in range(board_col - 5, - board_col + 4, -1)]
+        
         for dgd in bdiag:
             bdiagVals = ""
             for point in dgd:
@@ -67,6 +72,7 @@ class Board():
                 else:
                     bdiagVals += "2"
             dList.append(bdiagVals)
+            
         for dgu in fdiag:
             fdiagVals = ""
             for point in dgu:
@@ -77,7 +83,9 @@ class Board():
                 else:
                     fdiagVals += "2"
             dList.append(fdiagVals)
+            
         boardT = temp_board.copy().transpose()
+        
         for col in boardT:
             colVals = ""
             for point in col:
@@ -88,6 +96,7 @@ class Board():
                 else:
                     colVals += "2"
             cList.append(colVals)
+            
         for row in board:
             rowVals = ""
             for point in row:
@@ -98,6 +107,7 @@ class Board():
                 else:
                     rowVals += "2"
             rList.append(rowVals)
+            
         return dList+cList+rList
 
     def points_check(self, board, player):  # evaluates
@@ -138,52 +148,34 @@ class Board():
                         val += self.patterns[st]
         return val
     
-class Minimax():
+class Algorithms():
     b = Board()
     def __init__(self):
         self.MAX, self.MIN = math.inf, -math.inf
+        self.save_point = 0
     
     def getCoordsAround(self, board):
-        board_size = len(board)
-        outTpl = np.nonzero(board)  # return tuple of all non zero points on board
+        temp_board = np.array(board)
+        board_size = len(temp_board)
+        outTpl = np.nonzero(temp_board)  # return tuple of all non zero points on board
         potentialValsCoord = {}
 
-        temp_board = np.array(board)
-
         for i in range(len(outTpl[0])):
-            x = outTpl[0][i]
-            y = outTpl[1][i]
+            y = outTpl[0][i]
+            x = outTpl[1][i]
 
             for dy in [-1, 0, 1]:
                 for dx in [-1, 0, 1]:
                     new_x, new_y = x + dx, y + dy
                     if 0 <= new_x < board_size and 0 <= new_y < board_size and temp_board[new_y][new_x] == 0:
-                        potentialValsCoord[(new_y, new_x)] = 1
+                        potentialValsCoord[(new_x, new_y)] = 1
 
         finalValsX, finalValsY = [], []
         for key in potentialValsCoord:
-            finalValsY.append(key[0])
-            finalValsX.append(key[1])
+            finalValsY.append(key[1])
+            finalValsX.append(key[0])
         
         return finalValsX, finalValsY
-
-
-    def convertArrToMove(self, row, col):
-        colVal = chr(col+ord('a'))  # 97
-        rowVal = str(row+1)
-        return colVal+rowVal
-
-    def convertMoveToArr(self, col, row):
-        colVal = ord(col)-ord('a')  # double check
-        rowVal = int(row)-1
-        return colVal, rowVal
-
-
-    def convertKeyToArr(self, key):
-        colVal = ord(key[0])-ord('a')  # double check
-        rowVal = int(key[1:])-1
-        return colVal, rowVal
-
 
     def getRandomMove(self, board):
         global AI_turn
@@ -225,18 +217,55 @@ class Minimax():
     def otherPlayerStone(self, player):
         return 2 if player==1 else 1
 
-    def minimax(self, board, isMaximizer, depth, alpha, beta, player):
-        point = self.b.points(board, player)
-        if depth == 2 or point >= 20000000 or point <= -20000000:
-            return point
+    def greedyAlgorithm(self, board, player):
+        bestMoveRow = bestMoveCol = -1
+        bestOtherMoveRow = bestOtherMoveCol = -1
+        
+        mostPoints = float('-inf')
+        mostOtherPoints = float('-inf')
+        
+        potentialValsX, potentialValsY = self.getCoordsAround(board)
+        for i in range(len(potentialValsX)):
+            if board[potentialValsY[i]][potentialValsX[i]] == 0:
+                board[potentialValsY[i]][potentialValsX[i]] = player
+                movePoints = self.b.points(board, player)
 
+                board[potentialValsY[i]][potentialValsX[i]] = self.otherPlayerStone(player)
+                moveOtherPoints = self.b.points(board, self.otherPlayerStone(player))
+                
+                board[potentialValsY[i]][potentialValsX[i]] = 0
+                
+                if moveOtherPoints > mostOtherPoints:
+                    bestOtherMoveRow = potentialValsY[i]
+                    bestOtherMoveCol = potentialValsX[i]
+                    mostOtherPoints = moveOtherPoints
+                
+                if movePoints > mostPoints:
+                    bestMoveRow = potentialValsY[i]
+                    bestMoveCol = potentialValsX[i]
+                    mostPoints = movePoints
+
+        global AI_turn
+        AI_turn = False
+
+        if mostOtherPoints >= mostPoints:
+            return bestOtherMoveRow, bestOtherMoveCol
+        else:
+            return bestMoveRow, bestMoveCol
+
+    def alpha_beta(self, board, isMaximizer, depth, alpha, beta, player):  # alpha, beta
+        point = self.b.points(board, player)
+        
+        if depth == 2:
+            return point
+        
         if isMaximizer:  # THE MAXIMIZER
             best = self.MIN
             potentialValsX, potentialValsY = self.getCoordsAround(board)
             for i in range(len(potentialValsX)):
                 if board[potentialValsY[i]][potentialValsX[i]] == 0:
                     board[potentialValsY[i]][potentialValsX[i]] = player
-                    score = self.minimax(board, False, depth+1, alpha, beta, player)
+                    score = self.alpha_beta(board, False, depth+1, alpha, beta, player)
                     best = max(best, score)
                     alpha = max(alpha, best)  # best AI Opponent move
                     board[potentialValsY[i]][potentialValsX[i]] = 0  # undoing
@@ -250,7 +279,7 @@ class Minimax():
                 if board[potentialValsY[i]][potentialValsX[i]] == 0:
                     otherplayer = self.otherPlayerStone(player)
                     board[potentialValsY[i]][potentialValsX[i]] = otherplayer
-                    score = self.minimax(board, True, depth+1, alpha, beta, player)
+                    score = self.alpha_beta(board, True, depth+1, alpha, beta, player)
                     best = min(best, score)
                     beta = min(beta, best)  # best AI Opponent move
                     board[potentialValsY[i]][potentialValsX[i]] = 0  # undoing
@@ -258,21 +287,17 @@ class Minimax():
                         break
             return best
 
-    def computer(self, board, isComputerFirst):
+    def alpha_beta_computer(self, board, isComputerFirst):
         mostPoints = float('-inf')
         alpha,beta = self.MIN, self.MAX
-        if isComputerFirst == 1:
-            mark = 1
-        else:
-            mark = 2
         bestMoveRow = bestMoveCol = -1
-
+        
         potentialValsX, potentialValsY = self.getCoordsAround(board)
         for i in range(len(potentialValsX)):
             if board[potentialValsY[i]][potentialValsX[i]] == 0:
-                board[potentialValsY[i]][potentialValsX[i]] = mark
-                movePoints = max(mostPoints, self.minimax(
-                    board, False, 1, alpha, beta, mark))
+                board[potentialValsY[i]][potentialValsX[i]] = isComputerFirst
+                movePoints = max(mostPoints, self.alpha_beta(
+                    board, False, 1, alpha, beta, isComputerFirst))
                 alpha = max(alpha, movePoints)
                 board[potentialValsY[i]][potentialValsX[i]] = 0
                 if beta <= alpha:
@@ -283,18 +308,144 @@ class Minimax():
                     mostPoints = movePoints
                     if movePoints >= 20000000:
                         break
-        if bestMoveRow == -1 or bestMoveCol == -1:  # ' when still -1
-            bestMoveRow, bestMoveCol = self.getRandomMove(board)
+                elif movePoints == mostPoints:
+                    rannum = random.randint(0, 1)
+                    if rannum == 1:
+                        bestMoveRow = potentialValsY[i]
+                        bestMoveCol = potentialValsX[i]
+                        mostPoints = movePoints
+                        if movePoints >= 20000000:
+                            break
+
+        global AI_turn
+        AI_turn = False
+        return bestMoveRow, bestMoveCol
+    
+    def minimax(self, board, isMaximizer, depth, player):  # alpha, beta
+        point = self.b.points(board, player)
+        
+        if depth == 2:
+            return point
+        
+        if isMaximizer:  # THE MAXIMIZER
+            best = self.MIN
+            potentialValsX, potentialValsY = self.getCoordsAround(board)
+            for i in range(len(potentialValsX)):
+                if board[potentialValsY[i]][potentialValsX[i]] == 0:
+                    board[potentialValsY[i]][potentialValsX[i]] = player
+                    score = self.minimax(board, False, depth+1, player)
+                    best = max(best, score)
+                    board[potentialValsY[i]][potentialValsX[i]] = 0  # undoing
+            return best
+        else:  # THE MINIMIZER
+            best = self.MAX
+            potentialValsX, potentialValsY = self.getCoordsAround(board)
+            for i in range(len(potentialValsX)):
+                if board[potentialValsY[i]][potentialValsX[i]] == 0:
+                    otherplayer = self.otherPlayerStone(player)
+                    board[potentialValsY[i]][potentialValsX[i]] = otherplayer
+                    score = self.minimax(board, True, depth+1, player)
+                    best = min(best, score)
+                    board[potentialValsY[i]][potentialValsX[i]] = 0  # undoing
+            return best
+
+    def minimax_computer(self, board, isComputerFirst):
+        mostPoints = float('-inf')
+        bestMoveRow = bestMoveCol = -1
+        
+        potentialValsX, potentialValsY = self.getCoordsAround(board)
+        for i in range(len(potentialValsX)):
+            if board[potentialValsY[i]][potentialValsX[i]] == 0:
+                board[potentialValsY[i]][potentialValsX[i]] = isComputerFirst
+                movePoints = max(mostPoints, self.minimax(
+                    board, False, 1, isComputerFirst))
+                board[potentialValsY[i]][potentialValsX[i]] = 0
+                if movePoints > mostPoints:
+                    bestMoveRow = potentialValsY[i]
+                    bestMoveCol = potentialValsX[i]
+                    mostPoints = movePoints
+                    if movePoints >= 20000000:
+                        break
+                elif movePoints == mostPoints:
+                    rannum = random.randint(0, 1)
+                    if rannum == 1:
+                        bestMoveRow = potentialValsY[i]
+                        bestMoveCol = potentialValsX[i]
+                        mostPoints = movePoints
+                        if movePoints >= 20000000:
+                            break
+
+        global AI_turn
+        AI_turn = False
+        return bestMoveRow, bestMoveCol
+    
+    def mcts(self, board, isMaximizer, depth, player):  # alpha, beta
+        point = self.b.points(board, player)
+        
+        if depth == 2:
+            return point
+        
+        if isMaximizer:  # THE MAXIMIZER
+            best = self.MIN
+            potentialValsX, potentialValsY = self.getCoordsAround(board)
+            self.save_point += len(potentialValsX)
+            for i in range(len(potentialValsX)):
+                if board[potentialValsY[i]][potentialValsX[i]] == 0:
+                    board[potentialValsY[i]][potentialValsX[i]] = player
+                    score = self.mcts(board, False, depth+1, player)
+                    best = max(best, score)
+                    board[potentialValsY[i]][potentialValsX[i]] = 0  # undoing
+            return best
+        else:  # THE MINIMIZER
+            best = self.MAX
+            potentialValsX, potentialValsY = self.getCoordsAround(board)
+            self.save_point += len(potentialValsX)
+            for i in range(len(potentialValsX)):
+                if board[potentialValsY[i]][potentialValsX[i]] == 0:
+                    otherplayer = self.otherPlayerStone(player)
+                    board[potentialValsY[i]][potentialValsX[i]] = otherplayer
+                    score = self.mcts(board, True, depth+1, player)
+                    best = min(best, score)
+                    board[potentialValsY[i]][potentialValsX[i]] = 0  # undoing
+            return best
+
+    def mcts_computer(self, board, isComputerFirst):
+        mostPoints = float('-inf')
+        bestMoveRow = bestMoveCol = -1
+        
+        potentialValsX, potentialValsY = self.getCoordsAround(board)
+        save_x = 0
+        save_x += len(potentialValsX)
+        for i in range(len(potentialValsX)):
+            if board[potentialValsY[i]][potentialValsX[i]] == 0:
+                board[potentialValsY[i]][potentialValsX[i]] = isComputerFirst
+                self.save_point = 0
+                movePoints = self.mcts(board, False, 1, isComputerFirst)
+
+                ucb = movePoints / self.save_point + 1.4 * math.sqrt(math.log(save_x) / self.save_point)
+                board[potentialValsY[i]][potentialValsX[i]] = 0
+                if ucb > mostPoints:
+                    bestMoveRow = potentialValsY[i]
+                    bestMoveCol = potentialValsX[i]
+                    mostPoints = ucb
+                    if ucb >= 20000000:
+                        break
+                elif ucb == mostPoints:
+                    rannum = random.randint(0, 1)
+                    if rannum == 1:
+                        bestMoveRow = potentialValsY[i]
+                        bestMoveCol = potentialValsX[i]
+                        mostPoints = ucb
+                        if ucb >= 20000000:
+                            break
 
         global AI_turn
         AI_turn = False
         return bestMoveRow, bestMoveCol
 
-AI_turn = False
-
-class GUI(Board, Minimax):
+class GUI():
     b = Board()
-    m = Minimax()
+    m = Algorithms()
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("ĐỒ ÁN HỌC PHẦN - LẬP TRÌNH GAME CỜ CARO")
@@ -356,7 +507,10 @@ class GUI(Board, Minimax):
         self.AIfirst = False
         
         self.AI = False
-        self.AI_algorithm = False
+        self.ab_algorithm = False
+        self.g_algorithm = False
+        self.mm_algorithm = False
+        self.mcts_algorithm = False
         
         #Fills Empty List
         for z in range(1, self.board_size + 1):
@@ -381,16 +535,6 @@ class GUI(Board, Minimax):
         self.window.mainloop()
         
     def introduction(self):
-        # LabelHCMUTE logo
-        """
-        logo = tk.PhotoImage(file="./image/hcmute.png")
-        self.university_logo = tk.Label(self.window,
-                                        image = logo,
-                                        bg = "#b69b4c")
-        self.university_logo.image = logo
-        self.university_logo.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + 230,
-                                   y = self.board_y1 - self.frame_gap - 70)
-        """
         # Label tiêu đề
         self.title = tk.Label(self.window,
                               text = "ĐỒ ÁN CUỐI KỲ",
@@ -398,7 +542,7 @@ class GUI(Board, Minimax):
                               fg = "navy blue",
                               bg = "#b69b4c")
         self.title.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + 0.1875 * self.window.winfo_screenwidth(),
-                         y = self.board_y1 - self.frame_gap + 0.028 * self.window.winfo_screenheight())
+                         y = self.board_y1 - self.frame_gap - 0.028 * self.window.winfo_screenheight())
 
         # Label tên lớp
         self.class_name = tk.Label(self.window,
@@ -407,7 +551,7 @@ class GUI(Board, Minimax):
                                    fg = "navy blue",
                                    bg = "#b69b4c")
         self.class_name.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + 0.078125 * self.window.winfo_screenwidth(),
-                              y = self.board_y1 - self.frame_gap + 0.069 * self.window.winfo_screenheight())
+                              y = self.board_y1 - self.frame_gap + 0.015 * self.window.winfo_screenheight())
 
         # Label tên thành viên
         self.member_name = tk.Label(self.window,
@@ -416,7 +560,7 @@ class GUI(Board, Minimax):
                                     fg = "navy blue",
                                     bg = "#b69b4c")
         self.member_name.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(150 / 1920) * self.window.winfo_screenwidth(),
-                               y = self.board_y1 - self.frame_gap + float(105 / 1080) * self.window.winfo_screenheight())
+                               y = self.board_y1 - self.frame_gap + float(50 / 1080) * self.window.winfo_screenheight())
 
         # Label tên thành viên 1
         self.member_1 = tk.Label(self.window,
@@ -425,7 +569,7 @@ class GUI(Board, Minimax):
                                  fg = "navy blue",
                                  bg = "#b69b4c")
         self.member_1.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(420 / 1920) * self.window.winfo_screenwidth(),
-                            y = self.board_y1 - self.frame_gap + float(105 / 1080) * self.window.winfo_screenheight(),)
+                            y = self.board_y1 - self.frame_gap + float(50 / 1080) * self.window.winfo_screenheight(),)
 
         # Label tên thành viên 2
         self.member_2 = tk.Label(self.window, text = "Đào Hoàng Đăng    -      21110163",
@@ -433,7 +577,7 @@ class GUI(Board, Minimax):
                                  fg = "navy blue",
                                  bg = "#b69b4c")
         self.member_2.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(420 / 1920) * self.window.winfo_screenwidth(),
-                            y = self.board_y1 - self.frame_gap + float(145 / 1080) * self.window.winfo_screenheight(),)
+                            y = self.board_y1 - self.frame_gap + float(90 / 1080) * self.window.winfo_screenheight(),)
 
         # Label tên thành viên 3
         self.member_3 = tk.Label(self.window, text = "Nguyễn Anh Hào    -      21110823",
@@ -441,14 +585,14 @@ class GUI(Board, Minimax):
                                  fg = "navy blue",
                                  bg = "#b69b4c")
         self.member_3.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(420 / 1920) * self.window.winfo_screenwidth(),
-                            y = self.board_y1 - self.frame_gap + float(185 / 1080) * self.window.winfo_screenheight())
+                            y = self.board_y1 - self.frame_gap + float(130 / 1080) * self.window.winfo_screenheight())
         
     def best_line(self):
         # Frame
         self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_y * (self.board_size - 1) + float(100 / 1920) * self.window.winfo_screenwidth(),
-                                         self.board_y1 - self.frame_gap + float(250 / 1080) * self.window.winfo_screenheight(),
+                                         self.board_y1 - self.frame_gap + float(170 / 1080) * self.window.winfo_screenheight(),
                                          self.window.winfo_screenwidth() - float(100 / 1920) * self.window.winfo_screenwidth(),
-                                         self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1) - float(430 / 1080) * self.window.winfo_screenheight(),
+                                         self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1) - float(510 / 1080) * self.window.winfo_screenheight(),
                                          width = 3)
         
         # Label
@@ -458,7 +602,7 @@ class GUI(Board, Minimax):
                                         fg = "navy blue",
                                         bg = "#b69b4c")
         self.best_line_label.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(420 / 1920) * self.window.winfo_screenwidth(),
-                                   y = self.board_y1 - self.frame_gap + float(255 / 1080) * self.window.winfo_screenheight())
+                                   y = self.board_y1 - self.frame_gap + float(180 / 1080) * self.window.winfo_screenheight())
 
         # Text
         self.best_line_text = tk.Text(self.window,
@@ -467,12 +611,12 @@ class GUI(Board, Minimax):
                                       borderwidth = 3,
                                       state = tk.DISABLED)
         self.best_line_text.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(120 / 1920) * self.window.winfo_screenwidth(),
-                                  y = self.board_y1 - self.frame_gap + float(285 / 1080) * self.window.winfo_screenheight())
+                                  y = self.board_y1 - self.frame_gap + float(210 / 1080) * self.window.winfo_screenheight())
         
     def button(self):
         # Frame
         self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(100 / 1920) * self.window.winfo_screenwidth(),
-                           self.board_y1 - self.frame_gap + float(440 / 1080) * self.window.winfo_screenheight(),
+                           self.board_y1 - self.frame_gap + float(370 / 1080) * self.window.winfo_screenheight(),
                            self.window.winfo_screenwidth() - float(100 / 1920) * self.window.winfo_screenwidth(),
                            self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1),
                            fill = "silver",
@@ -480,9 +624,9 @@ class GUI(Board, Minimax):
 
         # Frame các nút điều khiển chính
         self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(130 / 1920) * self.window.winfo_screenwidth(),
-                                         self.board_y1 - self.frame_gap + float(470 / 1080) * self.window.winfo_screenheight(),
+                                         self.board_y1 - self.frame_gap + float(400 / 1080) * self.window.winfo_screenheight(),
                                          self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(480 / 1920) * self.window.winfo_screenwidth(),
-                                         self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1) - float(190 / 1080) * self.window.winfo_screenheight(),
+                                         self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1) - float(260 / 1080) * self.window.winfo_screenheight(),
                                          fill = "gray",
                                          outline = "gray")
         # Button bắt đầu chơi
@@ -493,18 +637,18 @@ class GUI(Board, Minimax):
                                       bg = "gray",
                                       fg = "black")
         self.start_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(155 / 1920) * self.window.winfo_screenwidth(),
-                                y = self.board_y1 - self.frame_gap + float(495 / 1080) * self.window.winfo_screenheight(),
+                                y = self.board_y1 - self.frame_gap + float(425 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
         # Button bát đầu chơi lại
         self.restart_button = tk.Button(self.window,
                                         text = "Restart",
                                         font = "Helvetica 14 bold",
-                                        command = self.restart,
+                                        command = None,
                                         bg = "gray",
                                         fg = "black")
         self.restart_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(315 / 1920) * self.window.winfo_screenwidth(),
-                                y = self.board_y1 - self.frame_gap + float(495 / 1080) * self.window.winfo_screenheight(),
+                                y = self.board_y1 - self.frame_gap + float(425 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
         # Button quay lại lượt trước
@@ -515,7 +659,7 @@ class GUI(Board, Minimax):
                                         bg = "gray",
                                         fg = "black")
         self.undo_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(155 / 1920) * self.window.winfo_screenwidth(),
-                                y = self.board_y1 - self.frame_gap + float(575 / 1080) * self.window.winfo_screenheight(),
+                                y = self.board_y1 - self.frame_gap + float(505 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
         # Button thoát game
@@ -526,15 +670,15 @@ class GUI(Board, Minimax):
                                         bg = "gray",
                                         fg = "black")
         self.exit_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(315 / 1920) * self.window.winfo_screenwidth(),
-                                y = self.board_y1 - self.frame_gap + float(575 / 1080) * self.window.winfo_screenheight(),
+                                y = self.board_y1 - self.frame_gap + float(505 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
         
         # Frame các nút chọn chế độ chơi
         self.background.create_rectangle(self.window.winfo_screenwidth() - float(480 / 1920) * self.window.winfo_screenwidth(),
-                                         self.board_y1 - self.frame_gap + float(470 / 1080) * self.window.winfo_screenheight(),
+                                         self.board_y1 - self.frame_gap + float(400 / 1080) * self.window.winfo_screenheight(),
                                          self.window.winfo_screenwidth() - float(130 / 1920) * self.window.winfo_screenwidth(),
-                                         self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1) - float(190 / 1080) * self.window.winfo_screenheight(),
+                                         self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1) - float(260 / 1080) * self.window.winfo_screenheight(),
                                          fill = "gray",
                                          outline = "gray")
         # Button AI chơi với Người
@@ -545,7 +689,7 @@ class GUI(Board, Minimax):
                                bg = "gray",
                                fg = "black")
         self.ai_human_button.place(x = self.window.winfo_screenwidth() - float(455 / 1920) * self.window.winfo_screenwidth(),
-                  y = self.board_y1 - self.frame_gap + float(495 / 1080) * self.window.winfo_screenheight(),
+                  y = self.board_y1 - self.frame_gap + float(425 / 1080) * self.window.winfo_screenheight(),
                   width = self.chess_radius * 15,
                   height = self.chess_radius * 3)
         # Button Người chơi với Người
@@ -556,33 +700,47 @@ class GUI(Board, Minimax):
                                bg = "gray",
                                fg = "black")
         self.human_human_button.place(x = self.window.winfo_screenwidth() - float(455 / 1920) * self.window.winfo_screenwidth(),
-                  y = self.board_y1 - self.frame_gap + float(575 / 1080) * self.window.winfo_screenheight(),
+                  y = self.board_y1 - self.frame_gap + float(505 / 1080) * self.window.winfo_screenheight(),
                   width = self.chess_radius * 15,
                   height = self.chess_radius * 3)
 
         # Frame các nút chọn thuật toán
         self.background.create_rectangle(self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(130 / 1920) * self.window.winfo_screenwidth(),
-                                         self.board_y1 - self.frame_gap + float(700 / 1080) * self.window.winfo_screenheight(),
+                                         self.board_y1 - self.frame_gap + float(615 / 1080) * self.window.winfo_screenheight(),
                                          self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(480 / 1920) * self.window.winfo_screenwidth(),
                                          self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1) - float(30 / 1080) * self.window.winfo_screenheight(),
                                          fill = "gray",
                                          outline = "gray")
+        
         # Button thuật toán Alpha-Beta
-        self.ab_algorithm_button = tk.Button(self.window, text = "Alpha-Beta", font = "Helvetica 14 bold", command = self.set_AI_algorithm, bg = "gray", fg = "black")
+        self.ab_algorithm_button = tk.Button(self.window, text = "Alpha-Beta", font = "Helvetica 14 bold", command = self.set_ab_algorithm, bg = "gray", fg = "black")
         self.ab_algorithm_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(155 / 1920) * self.window.winfo_screenwidth(),
+                                y = self.board_y1 - self.frame_gap + float(650 / 1080) * self.window.winfo_screenheight(),
+                                width = self.chess_radius * 7,
+                                height = self.chess_radius * 3)
+        # Button thuật toán Greedy
+        self.g_algorithm_button = tk.Button(self.window, text = "Greedy", font = "Helvetica 14 bold", command = self.set_g_algorithm, bg = "gray", fg = "black")
+        self.g_algorithm_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(315 / 1920) * self.window.winfo_screenwidth(),
+                                y = self.board_y1 - self.frame_gap + float(650 / 1080) * self.window.winfo_screenheight(),
+                                width = self.chess_radius * 7,
+                                height = self.chess_radius * 3)
+        
+        # Button thuật toán Minimax
+        self.mm_algorithm_button = tk.Button(self.window, text = "Minimax", font = "Helvetica 14 bold", command = self.set_mm_algorithm, bg = "gray", fg = "black")
+        self.mm_algorithm_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(155 / 1920) * self.window.winfo_screenwidth(),
                                 y = self.board_y1 - self.frame_gap + float(730 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
-        # Button thuật toán IDS
-        self.ids_algorithm_button = tk.Button(self.window, text = "IDS", font = "Helvetica 14 bold", command = self.unset_AI_algorithm, bg = "gray", fg = "black")
-        self.ids_algorithm_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(315 / 1920) * self.window.winfo_screenwidth(),
+        # Button thuật toán Monte Carlo Search Tree
+        self.mcts_algorithm_button = tk.Button(self.window, text = "MCTS", font = "Helvetica 14 bold", command = self.set_mcts_algorithm, bg = "gray", fg = "black")
+        self.mcts_algorithm_button.place(x = self.board_x1 + self.frame_gap + self.board_gap_x * (self.board_size - 1) + float(315 / 1920) * self.window.winfo_screenwidth(),
                                 y = self.board_y1 - self.frame_gap + float(730 / 1080) * self.window.winfo_screenheight(),
                                 width = self.chess_radius * 7,
                                 height = self.chess_radius * 3)
         
         # Frame các nút chọn ai đi trước
         self.background.create_rectangle(self.window.winfo_screenwidth() - float(480 / 1920) * self.window.winfo_screenwidth(),
-                                         self.board_y1 - self.frame_gap + float(700 / 1080) * self.window.winfo_screenheight(),
+                                         self.board_y1 - self.frame_gap + float(615 / 1080) * self.window.winfo_screenheight(),
                                          self.window.winfo_screenwidth() - float(130 / 1920) * self.window.winfo_screenwidth(),
                                          self.board_y1 + self.frame_gap + self.board_gap_y * (self.board_size - 1) - float(30 / 1080) * self.window.winfo_screenheight(),
                                          fill = "gray",
@@ -595,19 +753,19 @@ class GUI(Board, Minimax):
                                bg = "gray",
                                fg = "black")
         self.ai_first_button.place(x = self.window.winfo_screenwidth() - float(455 / 1920) * self.window.winfo_screenwidth(),
-                  y = self.board_y1 - self.frame_gap + float(730 / 1080) * self.window.winfo_screenheight(),
-                  width = self.chess_radius * 7,
+                  y = self.board_y1 - self.frame_gap + float(650 / 1080) * self.window.winfo_screenheight(),
+                  width = self.chess_radius * 15,
                   height = self.chess_radius * 3)
         # Button Người đánh trước
         self.human_first_button = tk.Button(self.window,
                                text = "Human First",
-                               font = "Helvetica 13 bold",
+                               font = "Helvetica 14 bold",
                                command = self.unset_AI_turn,
                                bg = "gray",
                                fg = "black")
-        self.human_first_button.place(x = self.window.winfo_screenwidth() - float(295 / 1920) * self.window.winfo_screenwidth(),
+        self.human_first_button.place(x = self.window.winfo_screenwidth() - float(455 / 1920) * self.window.winfo_screenwidth(),
                   y = self.board_y1 - self.frame_gap + float(730 / 1080) * self.window.winfo_screenheight(),
-                  width = self.chess_radius * 7,
+                  width = self.chess_radius * 15,
                   height = self.chess_radius * 3)
         
     def set_AI(self):
@@ -644,21 +802,61 @@ class GUI(Board, Minimax):
             self.gofirst = True
             self.AIfirst = False
         
-    def set_AI_algorithm(self):
+    def set_ab_algorithm(self):
         if self.AI == False:
             tk.messagebox.showerror("Error!!!","Please select AI vs Human!")
         else:
-            self.AI_algorithm = True
+            self.ab_algorithm = True
+            self.g_algorithm = False
+            self.mm_algorithm = False
+            self.mcts_algorithm = False
+            
             self.ab_algorithm_button.config(bg = "white")
-            self.ids_algorithm_button.config(bg = "gray")
+            self.g_algorithm_button.config(bg = "gray")
+            self.mm_algorithm_button.config(bg = "gray")
+            self.mcts_algorithm_button.config(bg = "gray")
 
-    def unset_AI_algorithm(self):
+    def set_g_algorithm(self):
         if self.AI == False:
             tk.messagebox.showerror("Error!!!","Please select AI vs Human!")
         else:
-            self.AI_algorithm = False    
+            self.ab_algorithm = False
+            self.g_algorithm = True
+            self.mm_algorithm = False
+            self.mcts_algorithm = False  
+            
             self.ab_algorithm_button.config(bg = "gray")
-            self.ids_algorithm_button.config(bg = "white")
+            self.g_algorithm_button.config(bg = "white")
+            self.mm_algorithm_button.config(bg = "gray")
+            self.mcts_algorithm_button.config(bg = "gray")
+            
+    def set_mm_algorithm(self):
+        if self.AI == False:
+            tk.messagebox.showerror("Error!!!","Please select AI vs Human!")
+        else:
+            self.ab_algorithm = False
+            self.g_algorithm = False
+            self.mm_algorithm = True
+            self.mcts_algorithm = False  
+            
+            self.ab_algorithm_button.config(bg = "gray")
+            self.g_algorithm_button.config(bg = "gray")
+            self.mm_algorithm_button.config(bg = "white")
+            self.mcts_algorithm_button.config(bg = "gray")
+            
+    def set_mcts_algorithm(self):
+        if self.AI == False:
+            tk.messagebox.showerror("Error!!!","Please select AI vs Human!")
+        else:
+            self.ab_algorithm = False
+            self.g_algorithm = False
+            self.mm_algorithm = False
+            self.mcts_algorithm = True  
+            
+            self.ab_algorithm_button.config(bg = "gray")
+            self.g_algorithm_button.config(bg = "gray")
+            self.mm_algorithm_button.config(bg = "gray")
+            self.mcts_algorithm_button.config(bg = "white")
         
     def game_board(self):
         # Tạo bàn cờ
@@ -769,27 +967,38 @@ class GUI(Board, Minimax):
                     self.piece_num = self.white_piece
                 else:
                     self.piece_num = self.black_piece
-                    
-                moveNum = 0
+
                 while self.winner == None:
+                    #self.restart_button.config(command = self.restart)
+                    
                     x = 0
                     y = 0
                     if(self.AI):
                         if(AI_turn):
-                            if(self.AI_algorithm):
-                                moveNum += 1
-                                if moveNum == 1:
+                            if(self.ab_algorithm):
+                                if self.turn_num <= 1:
                                     y, x = self.m.getRandomMove(self.board)
-                                    print(y, x)
                                 else:
-                                    y, x = self.m.computer(self.board, self.piece_num)
-                                x += 1
-                                y += 1
-                            else:
-                                # Thuật toán 2
-                                x = 0
-                                y = 0
-        
+                                    y, x = self.m.alpha_beta_computer(self.board, self.piece_num)
+                            elif(self.g_algorithm):
+                                if self.turn_num <= 1:
+                                    y, x = self.m.getRandomMove(self.board)
+                                else:
+                                    y, x = self.m.greedyAlgorithm(self.board, self.piece_num)
+                                    
+                            elif(self.mm_algorithm):
+                                if self.turn_num <= 1:
+                                    y, x = self.m.getRandomMove(self.board)
+                                else:
+                                    y, x = self.m.minimax_computer(self.board, self.piece_num)
+                                    
+                            elif(self.mcts_algorithm):
+                                if self.turn_num <= 1:
+                                    y, x = self.m.getRandomMove(self.board)
+                                else:
+                                    y, x = self.m.mcts_computer(self.board, self.piece_num)
+                            x += 1
+                            y += 1
                         else:
                             self.background.update()
                             x = self.click_cord[0]
@@ -852,11 +1061,12 @@ class GUI(Board, Minimax):
                 self.background.addtag_withtag("winnertext", winner_text)
         
     def restart(self):
-        circle_ids = self.background.find_withtag("circle")
-        self.background.delete(*circle_ids)
+        self.winner = "0"
+        circle_g = self.background.find_withtag("circle")
+        self.background.delete(*circle_g)
         
-        text_ids = self.background.find_withtag("text")
-        self.background.delete(*text_ids)
+        text_g = self.background.find_withtag("text")
+        self.background.delete(*text_g)
         
         winner_text = self.background.find_withtag("winnertext")
         self.background.delete(*winner_text)
@@ -867,14 +1077,17 @@ class GUI(Board, Minimax):
         self.ai_first_button.config(bg = "gray")
         self.human_first_button.config(bg = "gray")
         self.ab_algorithm_button.config(bg = "gray")
-        self.ids_algorithm_button.config(bg = "gray")
+        self.g_algorithm_button.config(bg = "gray")
         
         self.playwith = False
         self.gofirst = False
         self.AIfirst = False
         self.AI = False
         self.AI_turn = False
-        self.AI_algorithm = False
+        self.ab_algorithm = False
+        self.g_algorithm = False
+        self.mm_algorithm = False
+        self.mcts_algorithm = False
         
         self.turn_num = 1
         self.turn = "white"
@@ -904,7 +1117,7 @@ class GUI(Board, Minimax):
         
         self.AI = False
         
-        self.AI_algorithm = False
+        self.ab_algorithm = False
         
         #Fills Empty List
         for z in range(1, self.board_size + 1):
